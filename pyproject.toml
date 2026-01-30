@@ -34,6 +34,9 @@ test = ["pytest", "pytest-cov", "pyusb"]
 [project.scripts]
 ptouch = "ptouch.__main__:main"
 
+[tool.setuptools.package-dir]
+"" = "src"
+
 [tool.black]
 line-length = 100
 
@@ -67,7 +70,7 @@ python_functions = "test_*"
 addopts = "-v --tb=short"
 
 [tool.coverage.run]
-source = ["ptouch"]
+source = ["src/ptouch"]
 branch = true
 
 [tool.coverage.report]
