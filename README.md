@@ -1,5 +1,8 @@
 # ptouch
 
+[![Tests](https://github.com/nbuchwitz/python3-ptouch/actions/workflows/pytest.yml/badge.svg)](https://github.com/nbuchwitz/python3-ptouch/actions/workflows/pytest.yml)
+[![Linting](https://github.com/nbuchwitz/python3-ptouch/actions/workflows/lint.yml/badge.svg)](https://github.com/nbuchwitz/python3-ptouch/actions/workflows/lint.yml)
+
 A Python library for Brother P-touch label printers.
 
 ## Features
