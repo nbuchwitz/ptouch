@@ -11,19 +11,6 @@ from PIL import Image, ImageDraw, ImageFont
 from .tape import Tape
 
 
-class Align(Flag):
-    """Text alignment options. Combine with | operator, e.g. Align.LEFT | Align.TOP."""
-
-    LEFT = auto()
-    HCENTER = auto()
-    RIGHT = auto()
-    TOP = auto()
-    VCENTER = auto()
-    BOTTOM = auto()
-    # Convenience alias for both centered
-    CENTER = HCENTER | VCENTER
-
-
 class Label:
     """A label to be printed on a specific tape.
 
@@ -71,13 +58,25 @@ class TextLabel(Label):
     height for the printer/tape combination.
     """
 
+    class Align(Flag):
+        """Text alignment options. Combine with | operator, e.g. Align.LEFT | Align.TOP."""
+
+        LEFT = auto()
+        HCENTER = auto()
+        RIGHT = auto()
+        TOP = auto()
+        VCENTER = auto()
+        BOTTOM = auto()
+        # Convenience alias for both centered
+        CENTER = HCENTER | VCENTER
+
     def __init__(
         self,
         text: str,
         tape: type[Tape] | Tape,
         font_path: str,
         font_size: int | None = None,
-        align: Align = Align.CENTER,
+        align: "TextLabel.Align | None" = None,
         min_width_mm: float | None = None,
     ) -> None:
         """Initialize a text label.
@@ -92,7 +91,7 @@ class TextLabel(Label):
             Path to TrueType font file.
         font_size : int or None, optional
             Font size in pixels. Defaults to 80% of print height.
-        align : Align, default Align.CENTER
+        align : TextLabel.Align, default TextLabel.Align.CENTER
             Text alignment. Combine horizontal (LEFT, HCENTER, RIGHT) and
             vertical (TOP, VCENTER, BOTTOM) with |, e.g. Align.LEFT | Align.TOP.
             Use Align.CENTER for both horizontally and vertically centered.
@@ -104,7 +103,7 @@ class TextLabel(Label):
         self.tape = tape() if isinstance(tape, type) else tape
         self.font_path = font_path
         self.font_size = font_size
-        self.align = align
+        self.align = align if align is not None else TextLabel.Align.CENTER
         self.min_width_mm = min_width_mm
         self._image: Image.Image | None = None
 
@@ -154,17 +153,17 @@ class TextLabel(Label):
         draw = ImageDraw.Draw(image)
 
         # Horizontal alignment (account for bbox offset)
-        if Align.LEFT in self.align:
+        if TextLabel.Align.LEFT in self.align:
             text_x = padding - bbox[0]
-        elif Align.RIGHT in self.align:
+        elif TextLabel.Align.RIGHT in self.align:
             text_x = image_width - padding - bbox[2]
         else:  # HCENTER (default)
             text_x = (image_width - bbox[0] - bbox[2]) // 2
 
         # Vertical alignment (account for bbox offset)
-        if Align.TOP in self.align:
+        if TextLabel.Align.TOP in self.align:
             text_y = -bbox[1]
-        elif Align.BOTTOM in self.align:
+        elif TextLabel.Align.BOTTOM in self.align:
             text_y = height - bbox[3]
         else:  # VCENTER (default)
             text_y = (height - bbox[1] - bbox[3]) // 2
@@ -172,3 +171,7 @@ class TextLabel(Label):
         draw.text((text_x, text_y), self.text, font=font, fill=(0, 0, 0))
 
         self._image = image
+
+
+# Backwards compatibility alias
+Align = TextLabel.Align
