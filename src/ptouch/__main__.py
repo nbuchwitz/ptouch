@@ -64,35 +64,35 @@ ALIGN_VERTICAL = {
 def parse_args() -> argparse.Namespace:
     """Parse command line arguments."""
     parser = argparse.ArgumentParser(
-        prog="python -m ptouch",
+        prog="ptouch",
         description="Print labels on Brother P-touch printers.",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""\
 Examples:
   # Print text label via network (uses PIL default font)
-  python -m ptouch "Hello World" --host 192.168.1.100 --printer P900 --tape-width 36
+  ptouch "Hello World" --host 192.168.1.100 --printer P900 --tape-width 36
 
   # Print with custom font
-  python -m ptouch "Hello World" --host 192.168.1.100 --printer P900 \\
+  ptouch "Hello World" --host 192.168.1.100 --printer P900 \\
       --tape-width 36 --font /path/to/font.ttf
 
   # Print multiple labels (half-cut between, full cut after last)
-  python -m ptouch "Label 1" "Label 2" "Label 3" --host 192.168.1.100 \\
+  ptouch "Label 1" "Label 2" "Label 3" --host 192.168.1.100 \\
       --printer E550W --tape-width 12
 
   # Print image label via USB
-  python -m ptouch --image logo.png --usb --printer E550W --tape-width 12
+  ptouch --image logo.png --usb --printer E550W --tape-width 12
 
   # Print with fixed font size (disables auto-sizing)
-  python -m ptouch "Test" --host 192.168.1.100 --printer P900 \\
+  ptouch "Test" --host 192.168.1.100 --printer P900 \\
       --tape-width 24 --font-size 48 --high-resolution
 
   # Print 5 copies of a label
-  python -m ptouch "Asset Tag" --copies 5 --host 192.168.1.100 \\
+  ptouch "Asset Tag" --copies 5 --host 192.168.1.100 \\
       --printer P900 --tape-width 12
 
   # Print label with fixed width (50mm)
-  python -m ptouch "Short" --width 50 --host 192.168.1.100 \\
+  ptouch "Short" --width 50 --host 192.168.1.100 \\
       --printer P900 --tape-width 12
 """,
     )
