@@ -148,7 +148,6 @@ from ptouch import (
     PTP900,
     TextLabel,
     LaminatedTape36mm,
-    Align,
 )
 
 # Connect to printer
@@ -160,7 +159,7 @@ label = TextLabel(
     "Hello World",
     LaminatedTape36mm,
     font_path="/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
-    align=Align.CENTER,
+    align=TextLabel.Align.CENTER,
 )
 printer.print(label)
 ```
@@ -223,16 +222,18 @@ printer.print_multi(labels, half_cut=False)
 Text alignment can be combined using the `|` operator:
 
 ```python
-from ptouch import Align
+from ptouch import TextLabel
 
 # Horizontal: LEFT, HCENTER, RIGHT
 # Vertical: TOP, VCENTER, BOTTOM
 # Combined: CENTER (= HCENTER | VCENTER)
 
-align = Align.LEFT | Align.TOP
-align = Align.RIGHT | Align.BOTTOM
-align = Align.CENTER  # centered both ways
+align = TextLabel.Align.LEFT | TextLabel.Align.TOP
+align = TextLabel.Align.RIGHT | TextLabel.Align.BOTTOM
+align = TextLabel.Align.CENTER  # centered both ways
 ```
+
+Note: `Align` is also available as a backwards-compatible alias at package level.
 
 ## CLI Options
 
