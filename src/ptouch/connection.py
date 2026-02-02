@@ -173,8 +173,18 @@ class ConnectionUSB(Connection):
             )
 
     def write(self, payload: bytes) -> None:
-        """Write data to the printer via USB."""
-        self._ep_out.write(payload, len(payload))
+        """Write data to the printer via USB.
+
+        Raises
+        ------
+        PrinterConnectionError
+            If not all bytes were written successfully.
+        """
+        written = self._ep_out.write(payload, timeout=5000)
+        if written != len(payload):
+            raise PrinterConnectionError(
+                f"USB write incomplete: {written}/{len(payload)} bytes written"
+            )
 
     def close(self) -> None:
         """Close USB connection and reattach kernel driver if needed."""
