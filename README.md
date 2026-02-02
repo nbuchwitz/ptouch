@@ -2,6 +2,7 @@
 
 [![Tests](https://github.com/nbuchwitz/python3-ptouch/actions/workflows/pytest.yml/badge.svg)](https://github.com/nbuchwitz/python3-ptouch/actions/workflows/pytest.yml)
 [![Linting](https://github.com/nbuchwitz/python3-ptouch/actions/workflows/lint.yml/badge.svg)](https://github.com/nbuchwitz/python3-ptouch/actions/workflows/lint.yml)
+[![Documentation Status](https://readthedocs.org/projects/ptouch/badge/?version=latest)](https://ptouch.readthedocs.io/en/latest/?badge=latest)
 
 A Python library for Brother P-touch label printers.
 
@@ -29,6 +30,16 @@ pip install ptouch
 
 For USB support:
 - pyusb
+
+## Documentation
+
+Comprehensive documentation is available at [ptouch.readthedocs.io](https://ptouch.readthedocs.io/) including:
+
+- [Quick Start Guide](https://ptouch.readthedocs.io/en/latest/quickstart.html)
+- [User Guide](https://ptouch.readthedocs.io/en/latest/userguide.html)
+- [Examples](https://ptouch.readthedocs.io/en/latest/examples.html)
+- [API Reference](https://ptouch.readthedocs.io/en/latest/api/index.html)
+- [Troubleshooting](https://ptouch.readthedocs.io/en/latest/troubleshooting.html)
 
 ## Supported Devices
 
