@@ -172,18 +172,46 @@ class ConnectionUSB(Connection):
                 "USB endpoints not found. The device may not be a supported printer."
             )
 
-    def write(self, payload: bytes) -> None:
-        """Write data to the printer via USB.
+    def write(self, payload: bytes, retries: int = 3) -> None:
+        """Write data to the printer via USB with retry logic.
+
+        Parameters
+        ----------
+        retries : int, default 3
+            Number of retry attempts for transient failures.
 
         Raises
         ------
         PrinterConnectionError
-            If not all bytes were written successfully.
+            If not all bytes were written successfully after retries.
         """
-        written = self._ep_out.write(payload, timeout=5000)
-        if written != len(payload):
+        import time
+
+        last_error = None
+        for attempt in range(retries):
+            try:
+                written = self._ep_out.write(payload, timeout=5000)
+                if written != len(payload):
+                    raise PrinterConnectionError(
+                        f"USB write incomplete: {written}/{len(payload)} bytes written"
+                    )
+                return  # Success
+            except usb.core.USBError as e:
+                last_error = e
+                if attempt < retries - 1:
+                    time.sleep(0.1 * (attempt + 1))  # Exponential backoff
+                    continue
+                raise PrinterConnectionError(
+                    f"USB write failed after {retries} attempts: {e}",
+                    original_error=e,
+                ) from e
+            except PrinterConnectionError:
+                raise  # Don't retry validation errors
+
+        if last_error:
             raise PrinterConnectionError(
-                f"USB write incomplete: {written}/{len(payload)} bytes written"
+                f"USB write failed after {retries} attempts",
+                original_error=last_error,
             )
 
     def close(self) -> None:
@@ -272,34 +300,55 @@ class ConnectionNetwork(Connection):
                 original_error=e,
             ) from e
 
-    def write(self, payload: bytes) -> None:
-        """Write data to the printer via network.
+    def write(self, payload: bytes, retries: int = 3) -> None:
+        """Write data to the printer via network with retry logic.
+
+        Parameters
+        ----------
+        retries : int, default 3
+            Number of retry attempts for transient failures (timeout only).
 
         Raises
         ------
         PrinterConnectionError
-            If writing to the printer fails or times out.
+            If writing to the printer fails or times out after retries.
         """
+        import time
+
         if self._socket is None:
             raise PrinterConnectionError("Not connected to printer")
 
-        try:
-            self._socket.sendall(payload)
-        except socket.timeout as e:
+        last_error = None
+        for attempt in range(retries):
+            try:
+                self._socket.sendall(payload)
+                return  # Success
+            except socket.timeout as e:
+                last_error = e
+                if attempt < retries - 1:
+                    time.sleep(0.1 * (attempt + 1))  # Exponential backoff
+                    continue
+                raise PrinterConnectionError(
+                    f"Write to printer at {self.host}:{self.port} timed out "
+                    f"after {retries} attempts",
+                    original_error=e,
+                ) from e
+            except (BrokenPipeError, ConnectionResetError) as e:
+                raise PrinterConnectionError(
+                    f"Connection to printer at {self.host}:{self.port} was lost",
+                    original_error=e,
+                ) from e
+            except OSError as e:
+                raise PrinterConnectionError(
+                    f"Failed to write to printer at {self.host}:{self.port}: {e}",
+                    original_error=e,
+                ) from e
+
+        if last_error:
             raise PrinterConnectionError(
-                f"Write to printer at {self.host}:{self.port} timed out",
-                original_error=e,
-            ) from e
-        except (BrokenPipeError, ConnectionResetError) as e:
-            raise PrinterConnectionError(
-                f"Connection to printer at {self.host}:{self.port} was lost",
-                original_error=e,
-            ) from e
-        except OSError as e:
-            raise PrinterConnectionError(
-                f"Failed to write to printer at {self.host}:{self.port}: {e}",
-                original_error=e,
-            ) from e
+                f"Write to printer at {self.host}:{self.port} failed after {retries} attempts",
+                original_error=last_error,
+            )
 
     def read(self, num_bytes: int = 1024) -> bytes:
         """Read data from the printer via network.
