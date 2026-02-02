@@ -24,7 +24,17 @@ Example usage:
     >>> printer.print(label)
 """
 
-from .connection import Connection, ConnectionNetwork, ConnectionUSB, PrinterConnectionError
+from .connection import (
+    Connection,
+    ConnectionNetwork,
+    ConnectionUSB,
+    PrinterConnectionError,
+    PrinterNetworkError,
+    PrinterNotFoundError,
+    PrinterPermissionError,
+    PrinterTimeoutError,
+    PrinterWriteError,
+)
 from .label import Align, Label, TextLabel
 from .printer import LabelPrinter, MediaType, TapeConfig
 from .printers import PTE550W, PTP750W, PTP900, PTP900W, PTP910BT, PTP950NW
@@ -55,6 +65,11 @@ __all__ = [
     "ConnectionUSB",
     "ConnectionNetwork",
     "PrinterConnectionError",
+    "PrinterNetworkError",
+    "PrinterNotFoundError",
+    "PrinterPermissionError",
+    "PrinterTimeoutError",
+    "PrinterWriteError",
     # Printers
     "LabelPrinter",
     "PTE550W",
