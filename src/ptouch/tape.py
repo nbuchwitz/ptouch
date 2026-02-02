@@ -31,6 +31,15 @@ class LaminatedTape(Tape):
     pass
 
 
+class LaminatedTape3_5mm(LaminatedTape):
+    """3.5mm laminated tape.
+
+    Note: Media size reported by printer is 4mm.
+    """
+
+    width_mm = 4
+
+
 class LaminatedTape6mm(LaminatedTape):
     """6mm laminated tape."""
 

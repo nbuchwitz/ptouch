@@ -71,7 +71,7 @@ The library includes a command-line interface:
 Understanding the Basics
 -------------------------
 
-The library provides printer classes for different Brother P-touch models (``PTE550W``, ``PTP750W``, ``PTP900``, etc.) and tape types (``LaminatedTape6mm`` through ``LaminatedTape36mm``). See :doc:`api/printer` for complete printer specifications and :doc:`api/tape` for tape compatibility.
+The library provides printer classes for different Brother P-touch models (``PTE550W``, ``PTP750W``, ``PTP900``, etc.) and tape types (``LaminatedTape3_5mm`` through ``LaminatedTape36mm``). See :doc:`api/printer` for complete printer specifications and :doc:`api/tape` for tape compatibility.
 
 Error Handling
 --------------

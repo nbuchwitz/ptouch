@@ -15,6 +15,7 @@ from . import (
     ConnectionNetwork,
     ConnectionUSB,
     Label,
+    LaminatedTape3_5mm,
     LaminatedTape6mm,
     LaminatedTape9mm,
     LaminatedTape12mm,
@@ -33,6 +34,7 @@ from .printer import LabelPrinter
 
 # Mapping of tape width (mm) to tape classes
 TAPE_WIDTHS = {
+    3.5: LaminatedTape3_5mm,
     6: LaminatedTape6mm,
     9: LaminatedTape9mm,
     12: LaminatedTape12mm,
@@ -139,7 +141,7 @@ Examples:
     parser.add_argument(
         "--tape-width",
         "-t",
-        type=int,
+        type=float,
         required=True,
         choices=list(TAPE_WIDTHS.keys()),
         help="Tape width in mm",

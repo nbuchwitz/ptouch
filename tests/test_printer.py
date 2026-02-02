@@ -12,6 +12,7 @@ from ptouch.printer import TapeConfig
 from ptouch.printer import MediaType
 from ptouch.printers import PTE550W, PTP750W, PTP900
 from ptouch.tape import (
+    LaminatedTape3_5mm,
     LaminatedTape6mm,
     LaminatedTape12mm,
     LaminatedTape24mm,
@@ -64,6 +65,7 @@ class TestPTE550W:
 
     def test_pin_configs(self) -> None:
         """Test that PIN_CONFIGS contains expected tape types."""
+        assert LaminatedTape3_5mm in PTE550W.PIN_CONFIGS
         assert LaminatedTape6mm in PTE550W.PIN_CONFIGS
         assert LaminatedTape12mm in PTE550W.PIN_CONFIGS
         assert LaminatedTape24mm in PTE550W.PIN_CONFIGS
@@ -116,6 +118,7 @@ class TestPTP900:
 
     def test_supports_36mm_tape(self) -> None:
         """Test that P900 supports 36mm tape."""
+        assert LaminatedTape3_5mm in PTP900.PIN_CONFIGS
         assert LaminatedTape36mm in PTP900.PIN_CONFIGS
 
     def test_get_tape_config_36mm(self, mock_connection: MockConnection) -> None:
