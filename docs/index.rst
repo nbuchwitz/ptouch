@@ -15,26 +15,47 @@ Features
 * TIFF compression for efficient data transfer
 * Comprehensive error handling with specific exception types
 
-Quick Start
------------
+Installation
+------------
+
+.. code-block:: bash
+
+   pip install ptouch        # Basic installation
+   pip install ptouch[usb]   # With USB support
+
+Quick Example
+-------------
 
 .. code-block:: python
 
    from ptouch import ConnectionNetwork, PTP900, TextLabel, LaminatedTape36mm
-   
+   from PIL import ImageFont
+
    connection = ConnectionNetwork("192.168.1.100")
    printer = PTP900(connection, high_resolution=True)
-   
-   label = TextLabel("Hello World", LaminatedTape36mm, 
-                     font="/path/to/font.ttf")
+
+   font = ImageFont.load_default()
+   label = TextLabel("Hello World", LaminatedTape36mm, font=font)
    printer.print(label)
 
-API Reference
+Documentation
 -------------
 
 .. toctree::
    :maxdepth: 2
-   :caption: Contents:
+   :caption: User Guide
+
+   installation
+   quickstart
+   userguide
+   examples
+   advanced
+   adding_devices
+   troubleshooting
+
+.. toctree::
+   :maxdepth: 2
+   :caption: API Reference
 
    api/connection
    api/printer
@@ -42,44 +63,7 @@ API Reference
    api/tape
    api/exceptions
 
-Connection Module
------------------
-
-.. automodule:: ptouch.connection
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-Printer Module
---------------
-
-.. automodule:: ptouch.printer
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-.. automodule:: ptouch.printers
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-Label Module
-------------
-
-.. automodule:: ptouch.label
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-Tape Module
------------
-
-.. automodule:: ptouch.tape
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-Indices and tables
+Indices and Tables
 ==================
 
 * :ref:`genindex`
