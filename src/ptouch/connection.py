@@ -169,7 +169,8 @@ class ConnectionUSB(Connection):
 
         if self._ep_in is None or self._ep_out is None:
             raise PrinterConnectionError(
-                "USB endpoints not found. The device may not be a supported printer."
+                "USB endpoints not found. The device may not be a supported printer. "
+                "Ensure you are using a compatible Brother P-touch model."
             )
 
     def write(self, payload: bytes, retries: int = 3) -> None:
@@ -193,7 +194,9 @@ class ConnectionUSB(Connection):
                 written = self._ep_out.write(payload, timeout=5000)
                 if written != len(payload):
                     raise PrinterConnectionError(
-                        f"USB write incomplete: {written}/{len(payload)} bytes written"
+                        f"USB write incomplete: {written}/{len(payload)} bytes written. "
+                        "This may indicate a USB communication issue. "
+                        "Try reconnecting the printer or using a different USB port."
                     )
                 return  # Success
             except usb.core.USBError as e:
@@ -202,7 +205,8 @@ class ConnectionUSB(Connection):
                     time.sleep(0.1 * (attempt + 1))  # Exponential backoff
                     continue
                 raise PrinterConnectionError(
-                    f"USB write failed after {retries} attempts: {e}",
+                    f"USB write failed after {retries} attempts: {e}. "
+                    "Check USB connection and ensure the printer is powered on.",
                     original_error=e,
                 ) from e
             except PrinterConnectionError:
@@ -210,7 +214,8 @@ class ConnectionUSB(Connection):
 
         if last_error:
             raise PrinterConnectionError(
-                f"USB write failed after {retries} attempts",
+                f"USB write failed after {retries} attempts. "
+                "Check USB connection and ensure the printer is powered on.",
                 original_error=last_error,
             )
 
@@ -346,7 +351,8 @@ class ConnectionNetwork(Connection):
 
         if last_error:
             raise PrinterConnectionError(
-                f"Write to printer at {self.host}:{self.port} failed after {retries} attempts",
+                f"Write to printer at {self.host}:{self.port} failed after {retries} attempts. "
+                "Check network connection and ensure the printer is powered on and accessible.",
                 original_error=last_error,
             )
 
