@@ -22,7 +22,7 @@ USB_VENDOR_ID = 0x04F9
 
 
 class PrinterConnectionError(Exception):
-    """Exception raised when connection to printer fails.
+    """Base exception for all printer connection errors.
 
     Parameters
     ----------
@@ -35,6 +35,55 @@ class PrinterConnectionError(Exception):
     def __init__(self, message: str, original_error: Exception | None = None) -> None:
         super().__init__(message)
         self.original_error = original_error
+
+
+class PrinterNotFoundError(PrinterConnectionError):
+    """Printer device not found or not accessible.
+
+    Raised when:
+    - USB device with specified product ID is not detected
+    - USB endpoints are not found on the device
+    """
+
+
+class PrinterPermissionError(PrinterConnectionError):
+    """Insufficient permissions to access printer.
+
+    Raised when:
+    - USB device requires elevated permissions (EACCES)
+    - Typically resolved by running with sudo or configuring udev rules
+    """
+
+
+class PrinterNetworkError(PrinterConnectionError):
+    """Network-specific connection errors.
+
+    Raised when:
+    - Connection is refused by the printer
+    - Hostname cannot be resolved
+    - Network connection is lost (BrokenPipe, ConnectionReset)
+    - Generic network connection failures
+    """
+
+
+class PrinterTimeoutError(PrinterConnectionError):
+    """Connection or operation timeout.
+
+    Raised when:
+    - Network connection attempt times out
+    - Write operation times out after retries
+    - Read operation times out
+    """
+
+
+class PrinterWriteError(PrinterConnectionError):
+    """Failed to write data to printer.
+
+    Raised when:
+    - Incomplete write (not all bytes written)
+    - Write operation fails after retry attempts
+    - USB or network write encounters non-recoverable error
+    """
 
 
 class Connection(ABC):
@@ -118,8 +167,11 @@ class ConnectionUSB(Connection):
         Raises
         ------
         PrinterConnectionError
-            If USB_PRODUCT_ID is not defined on the printer class,
-            the device is not found, or USB access fails.
+            If USB_PRODUCT_ID is not defined on the printer class or USB initialization fails.
+        PrinterNotFoundError
+            If the device is not found or USB endpoints are missing.
+        PrinterPermissionError
+            If access is denied (requires sudo or udev rules).
         """
         product_id = getattr(printer, "USB_PRODUCT_ID", None)
         if product_id is None:
@@ -130,7 +182,7 @@ class ConnectionUSB(Connection):
 
         self._device = usb.core.find(idVendor=USB_VENDOR_ID, idProduct=product_id)
         if self._device is None:
-            raise PrinterConnectionError(
+            raise PrinterNotFoundError(
                 f"USB printer with product ID 0x{product_id:04X} not found. "
                 "Check if the printer is connected and powered on."
             )
@@ -144,7 +196,7 @@ class ConnectionUSB(Connection):
             self._device.set_configuration()
         except usb.core.USBError as e:
             if e.errno == errno.EACCES:
-                raise PrinterConnectionError(
+                raise PrinterPermissionError(
                     "Permission denied accessing USB printer. "
                     "Try running with sudo or configure udev rules.",
                     original_error=e,
@@ -168,7 +220,7 @@ class ConnectionUSB(Connection):
         self._ep_out = usb.util.find_descriptor(intf, custom_match=match_endpoint_out)
 
         if self._ep_in is None or self._ep_out is None:
-            raise PrinterConnectionError(
+            raise PrinterNotFoundError(
                 "USB endpoints not found. The device may not be a supported printer. "
                 "Ensure you are using a compatible Brother P-touch model."
             )
@@ -183,7 +235,7 @@ class ConnectionUSB(Connection):
 
         Raises
         ------
-        PrinterConnectionError
+        PrinterWriteError
             If not all bytes were written successfully after retries.
         """
         import time
@@ -193,7 +245,7 @@ class ConnectionUSB(Connection):
             try:
                 written = self._ep_out.write(payload, timeout=5000)
                 if written != len(payload):
-                    raise PrinterConnectionError(
+                    raise PrinterWriteError(
                         f"USB write incomplete: {written}/{len(payload)} bytes written. "
                         "This may indicate a USB communication issue. "
                         "Try reconnecting the printer or using a different USB port."
@@ -204,16 +256,16 @@ class ConnectionUSB(Connection):
                 if attempt < retries - 1:
                     time.sleep(0.1 * (attempt + 1))  # Exponential backoff
                     continue
-                raise PrinterConnectionError(
+                raise PrinterWriteError(
                     f"USB write failed after {retries} attempts: {e}. "
                     "Check USB connection and ensure the printer is powered on.",
                     original_error=e,
                 ) from e
-            except PrinterConnectionError:
+            except PrinterWriteError:
                 raise  # Don't retry validation errors
 
         if last_error:
-            raise PrinterConnectionError(
+            raise PrinterWriteError(
                 f"USB write failed after {retries} attempts. "
                 "Check USB connection and ensure the printer is powered on.",
                 original_error=last_error,
@@ -262,8 +314,10 @@ class ConnectionNetwork(Connection):
 
         Raises
         ------
-        PrinterConnectionError
-            If the printer cannot be reached or connection fails.
+        PrinterTimeoutError
+            If connection attempt times out.
+        PrinterNetworkError
+            If connection is refused, hostname cannot be resolved, or connection fails.
         """
         del printer  # unused for network connections
 
@@ -277,14 +331,14 @@ class ConnectionNetwork(Connection):
         except socket.timeout as e:
             self._socket.close()
             self._socket = None
-            raise PrinterConnectionError(
+            raise PrinterTimeoutError(
                 f"Connection to printer at {self.host}:{self.port} timed out after {self.timeout}s",
                 original_error=e,
             ) from e
         except ConnectionRefusedError as e:
             self._socket.close()
             self._socket = None
-            raise PrinterConnectionError(
+            raise PrinterNetworkError(
                 f"Connection refused by printer at {self.host}:{self.port}. "
                 "Check if the printer is powered on and accepts network connections.",
                 original_error=e,
@@ -292,7 +346,7 @@ class ConnectionNetwork(Connection):
         except socket.gaierror as e:
             self._socket.close()
             self._socket = None
-            raise PrinterConnectionError(
+            raise PrinterNetworkError(
                 f"Cannot resolve hostname '{self.host}'. "
                 "Check if the hostname or IP address is correct.",
                 original_error=e,
@@ -300,7 +354,7 @@ class ConnectionNetwork(Connection):
         except OSError as e:
             self._socket.close()
             self._socket = None
-            raise PrinterConnectionError(
+            raise PrinterNetworkError(
                 f"Failed to connect to printer at {self.host}:{self.port}: {e}",
                 original_error=e,
             ) from e
@@ -316,7 +370,13 @@ class ConnectionNetwork(Connection):
         Raises
         ------
         PrinterConnectionError
-            If writing to the printer fails or times out after retries.
+            If not connected to printer.
+        PrinterTimeoutError
+            If write operation times out after retries.
+        PrinterNetworkError
+            If connection is lost during write.
+        PrinterWriteError
+            If write operation fails.
         """
         import time
 
@@ -333,24 +393,24 @@ class ConnectionNetwork(Connection):
                 if attempt < retries - 1:
                     time.sleep(0.1 * (attempt + 1))  # Exponential backoff
                     continue
-                raise PrinterConnectionError(
+                raise PrinterTimeoutError(
                     f"Write to printer at {self.host}:{self.port} timed out "
                     f"after {retries} attempts",
                     original_error=e,
                 ) from e
             except (BrokenPipeError, ConnectionResetError) as e:
-                raise PrinterConnectionError(
+                raise PrinterNetworkError(
                     f"Connection to printer at {self.host}:{self.port} was lost",
                     original_error=e,
                 ) from e
             except OSError as e:
-                raise PrinterConnectionError(
+                raise PrinterWriteError(
                     f"Failed to write to printer at {self.host}:{self.port}: {e}",
                     original_error=e,
                 ) from e
 
         if last_error:
-            raise PrinterConnectionError(
+            raise PrinterTimeoutError(
                 f"Write to printer at {self.host}:{self.port} failed after {retries} attempts. "
                 "Check network connection and ensure the printer is powered on and accessible.",
                 original_error=last_error,
@@ -362,7 +422,11 @@ class ConnectionNetwork(Connection):
         Raises
         ------
         PrinterConnectionError
-            If reading from the printer fails or times out.
+            If not connected to printer.
+        PrinterTimeoutError
+            If read operation times out.
+        PrinterNetworkError
+            If connection is lost or read fails.
         """
         if self._socket is None:
             raise PrinterConnectionError("Not connected to printer")
@@ -370,17 +434,17 @@ class ConnectionNetwork(Connection):
         try:
             return self._socket.recv(num_bytes)
         except socket.timeout as e:
-            raise PrinterConnectionError(
+            raise PrinterTimeoutError(
                 f"Read from printer at {self.host}:{self.port} timed out",
                 original_error=e,
             ) from e
         except (BrokenPipeError, ConnectionResetError) as e:
-            raise PrinterConnectionError(
+            raise PrinterNetworkError(
                 f"Connection to printer at {self.host}:{self.port} was lost",
                 original_error=e,
             ) from e
         except OSError as e:
-            raise PrinterConnectionError(
+            raise PrinterNetworkError(
                 f"Failed to read from printer at {self.host}:{self.port}: {e}",
                 original_error=e,
             ) from e

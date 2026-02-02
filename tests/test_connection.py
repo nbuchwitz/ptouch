@@ -9,7 +9,16 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from ptouch.connection import ConnectionNetwork, ConnectionUSB, PrinterConnectionError
+from ptouch.connection import (
+    ConnectionNetwork,
+    ConnectionUSB,
+    PrinterConnectionError,
+    PrinterNetworkError,
+    PrinterNotFoundError,
+    PrinterPermissionError,
+    PrinterTimeoutError,
+    PrinterWriteError,
+)
 
 
 class MockPrinter:
@@ -45,6 +54,57 @@ class TestPrinterConnectionError:
         from ptouch import PrinterConnectionError as ImportedError
 
         assert ImportedError is PrinterConnectionError
+
+
+class TestPrinterExceptionHierarchy:
+    """Test exception hierarchy and inheritance."""
+
+    def test_all_exceptions_inherit_from_base(self) -> None:
+        """Test that all specific exceptions inherit from PrinterConnectionError."""
+        assert issubclass(PrinterNotFoundError, PrinterConnectionError)
+        assert issubclass(PrinterPermissionError, PrinterConnectionError)
+        assert issubclass(PrinterNetworkError, PrinterConnectionError)
+        assert issubclass(PrinterTimeoutError, PrinterConnectionError)
+        assert issubclass(PrinterWriteError, PrinterConnectionError)
+
+    def test_exceptions_are_importable_from_package(self) -> None:
+        """Test that all exceptions can be imported from ptouch package."""
+        from ptouch import (
+            PrinterConnectionError as Base,
+            PrinterNetworkError as Network,
+            PrinterNotFoundError as NotFound,
+            PrinterPermissionError as Permission,
+            PrinterTimeoutError as Timeout,
+            PrinterWriteError as Write,
+        )
+
+        assert Base is PrinterConnectionError
+        assert Network is PrinterNetworkError
+        assert NotFound is PrinterNotFoundError
+        assert Permission is PrinterPermissionError
+        assert Timeout is PrinterTimeoutError
+        assert Write is PrinterWriteError
+
+    def test_specific_exception_can_be_caught_specifically(self) -> None:
+        """Test that specific exceptions can be caught without catching all."""
+        with pytest.raises(PrinterNotFoundError):
+            raise PrinterNotFoundError("Device not found")
+
+        with pytest.raises(PrinterConnectionError):
+            raise PrinterNotFoundError("Device not found")
+
+    def test_exception_with_original_error(self) -> None:
+        """Test that all exceptions support original_error parameter."""
+        original = ValueError("Original")
+        errors = [
+            PrinterNotFoundError("Not found", original_error=original),
+            PrinterPermissionError("Permission denied", original_error=original),
+            PrinterNetworkError("Network error", original_error=original),
+            PrinterTimeoutError("Timeout", original_error=original),
+            PrinterWriteError("Write failed", original_error=original),
+        ]
+        for error in errors:
+            assert error.original_error is original
 
 
 class TestConnectionUSBInit:

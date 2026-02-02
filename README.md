@@ -284,6 +284,34 @@ options:
   --width, -w MM        Fixed label width in mm (default: auto-sized to content)
 ```
 
+## Error Handling
+
+The library provides a hierarchy of exception classes for targeted error handling:
+
+```python
+from ptouch import (
+    PrinterConnectionError,     # Base exception for all connection errors
+    PrinterNotFoundError,        # Printer device not found
+    PrinterPermissionError,      # Permission denied (USB requires sudo/udev rules)
+    PrinterNetworkError,         # Network connection/communication errors
+    PrinterTimeoutError,         # Connection or operation timeout
+    PrinterWriteError,           # Failed to write data to printer
+)
+
+try:
+    printer.print(label)
+except PrinterPermissionError:
+    print("Permission denied. Try running with sudo or configure udev rules.")
+except PrinterTimeoutError:
+    print("Printer not responding. Check connection and power.")
+except PrinterNotFoundError:
+    print("Printer not found. Check if device is connected.")
+except PrinterConnectionError:
+    print("General connection error occurred.")
+```
+
+All specific exceptions inherit from `PrinterConnectionError`, allowing you to catch all connection-related errors with a single except clause, or handle specific error types individually for more targeted error handling.
+
 ## License
 
 LGPL-2.1-or-later - see [LICENSE](LICENSE) for details.
