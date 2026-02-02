@@ -41,6 +41,7 @@ from .printers import PTE550W, PTP750W, PTP900, PTP900W, PTP910BT, PTP950NW
 from .tape import (
     HeatShrinkTape,
     LaminatedTape,
+    LaminatedTape3_5mm,
     LaminatedTape6mm,
     LaminatedTape9mm,
     LaminatedTape12mm,
@@ -81,6 +82,7 @@ __all__ = [
     # Tapes
     "Tape",
     "LaminatedTape",
+    "LaminatedTape3_5mm",
     "LaminatedTape6mm",
     "LaminatedTape9mm",
     "LaminatedTape12mm",

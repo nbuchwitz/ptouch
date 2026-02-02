@@ -58,7 +58,7 @@ Comprehensive documentation is available at [ptouch.readthedocs.io](https://ptou
 
 | Type | Widths | Class |
 |------|--------|-------|
-| Laminated (TZe) | 6mm, 9mm, 12mm, 18mm, 24mm, 36mm | `LaminatedTape*mm` |
+| Laminated (TZe) | 3.5mm, 6mm, 9mm, 12mm, 18mm, 24mm, 36mm | `LaminatedTape*mm` |
 
 ## Adding Support for New Devices
 
@@ -270,7 +270,7 @@ Note: `Align` is also available as a backwards-compatible alias at package level
 
 ```
 usage: ptouch [-h] [--image FILE] (--host IP | --usb) --printer {E550W,P750W,P900,P900W,P950NW}
-              --tape-width {6,9,12,18,24,36} [--font PATH] [--font-size PX]
+              --tape-width {3.5,6,9,12,18,24,36} [--font PATH] [--font-size PX]
               [--align H V] [--high-resolution] [--margin MM] [--no-compression]
               [--full-cut] [--copies N] [--width MM] [text ...]
 

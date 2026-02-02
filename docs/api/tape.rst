@@ -20,6 +20,7 @@ Laminated tapes are the most common tape type for Brother P-touch printers.
 Available Widths
 ^^^^^^^^^^^^^^^^
 
+* ``LaminatedTape3_5mm`` - 3.5mm laminated tape
 * ``LaminatedTape6mm`` - 6mm laminated tape
 * ``LaminatedTape9mm`` - 9mm laminated tape
 * ``LaminatedTape12mm`` - 12mm laminated tape
@@ -33,6 +34,8 @@ Compatibility
 +------------+----------+----------+----------+
 | Tape Width | E550W    | P750W    | P900     |
 +============+==========+==========+==========+
+| 3.5mm      | ✓        | ✓        | ✓        |
++------------+----------+----------+----------+
 | 6mm        | ✓        | ✓        | ✓        |
 +------------+----------+----------+----------+
 | 9mm        | ✓        | ✓        | ✓        |

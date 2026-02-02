@@ -9,6 +9,7 @@ import pytest
 from ptouch.tape import (
     HeatShrinkTape,
     LaminatedTape,
+    LaminatedTape3_5mm,
     LaminatedTape6mm,
     LaminatedTape9mm,
     LaminatedTape12mm,
@@ -25,6 +26,7 @@ class TestTapeWidths:
     @pytest.mark.parametrize(
         "tape_class,expected_width",
         [
+            (LaminatedTape3_5mm, 4),
             (LaminatedTape6mm, 6),
             (LaminatedTape9mm, 9),
             (LaminatedTape12mm, 12),
@@ -43,6 +45,7 @@ class TestTapeWidths:
     @pytest.mark.parametrize(
         "tape_class,expected_width",
         [
+            (LaminatedTape3_5mm, 4),
             (LaminatedTape6mm, 6),
             (LaminatedTape9mm, 9),
             (LaminatedTape12mm, 12),
@@ -72,6 +75,7 @@ class TestTapeInheritance:
     @pytest.mark.parametrize(
         "tape_class",
         [
+            LaminatedTape3_5mm,
             LaminatedTape6mm,
             LaminatedTape9mm,
             LaminatedTape12mm,
@@ -94,6 +98,7 @@ class TestTapeInstantiation:
     @pytest.mark.parametrize(
         "tape_class",
         [
+            LaminatedTape3_5mm,
             LaminatedTape6mm,
             LaminatedTape9mm,
             LaminatedTape12mm,
