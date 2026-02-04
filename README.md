@@ -58,7 +58,7 @@ Comprehensive documentation is available at [ptouch.readthedocs.io](https://ptou
 
 | Type | Widths | Class |
 |------|--------|-------|
-| Laminated (TZe) | 3.5mm, 6mm, 9mm, 12mm, 18mm, 24mm, 36mm | `LaminatedTape*mm` |
+| TZe | 3.5mm, 6mm, 9mm, 12mm, 18mm, 24mm, 36mm | `Tape*mm` |
 
 ## Adding Support for New Devices
 
@@ -68,7 +68,7 @@ To add support for a new P-touch printer, create a subclass of `LabelPrinter` in
 
 ```python
 from ptouch.printer import LabelPrinter, TapeConfig
-from ptouch.tape import LaminatedTape12mm, LaminatedTape24mm  # etc.
+from ptouch.tape import Tape12mm, Tape24mm  # etc.
 
 class PTP710BT(LabelPrinter):
     """Brother PT-P710BT label printer."""
@@ -97,8 +97,8 @@ class PTP710BT(LabelPrinter):
     # Pin configuration for each tape width
     # Values from Brother raster command reference PDF
     PIN_CONFIGS = {
-        LaminatedTape12mm: TapeConfig(left_pins=29, print_pins=70, right_pins=29),
-        LaminatedTape24mm: TapeConfig(left_pins=0, print_pins=128, right_pins=0),
+        Tape12mm: TapeConfig(left_pins=29, print_pins=70, right_pins=29),
+        Tape24mm: TapeConfig(left_pins=0, print_pins=128, right_pins=0),
         # Add more tape sizes as needed
     }
 ```
@@ -108,13 +108,13 @@ Brother raster command reference documentation for your printer model.
 
 ### Adding a New Tape Type
 
-To add a new tape type, create a subclass of `Tape` or `LaminatedTape` in `ptouch/tape.py`:
+To add a new tape type, create a subclass of `Tape` in `ptouch/tape.py`:
 
 ```python
-from ptouch.tape import LaminatedTape
+from ptouch.tape import Tape
 
-class LaminatedTape48mm(LaminatedTape):
-    """48mm laminated tape."""
+class Tape48mm(Tape):
+    """48mm tape."""
     width_mm = 48
 ```
 
@@ -167,7 +167,7 @@ from ptouch import (
     ConnectionNetwork,
     PTP900,
     TextLabel,
-    LaminatedTape36mm,
+    Tape36mm,
 )
 
 # Connect to printer
@@ -177,7 +177,7 @@ printer = PTP900(connection, high_resolution=True)
 # Create and print text label
 label = TextLabel(
     "Hello World",
-    LaminatedTape36mm,
+    Tape36mm,
     font="/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
     align=TextLabel.Align.CENTER,
 )
@@ -186,40 +186,40 @@ printer.print(label)
 # Or use a pre-loaded ImageFont (auto-sized by default)
 from PIL import ImageFont
 font = ImageFont.truetype("/path/to/font.ttf", size=48)
-label = TextLabel("Custom Font", LaminatedTape36mm, font=font)
+label = TextLabel("Custom Font", Tape36mm, font=font)
 
 # Use ImageFont with its built-in size (disable auto-sizing)
-label = TextLabel("Fixed Size", LaminatedTape36mm, font=font, auto_size=False)
+label = TextLabel("Fixed Size", Tape36mm, font=font, auto_size=False)
 
 # For quick testing, use the default font (requires Pillow 10.1+)
-label = TextLabel("Quick Test", LaminatedTape36mm, font=ImageFont.load_default())
+label = TextLabel("Quick Test", Tape36mm, font=ImageFont.load_default())
 ```
 
 #### Image Labels
 
 ```python
 from PIL import Image
-from ptouch import ConnectionNetwork, PTP900, Label, LaminatedTape36mm
+from ptouch import ConnectionNetwork, PTP900, Label, Tape36mm
 
 connection = ConnectionNetwork("192.168.1.100")
 printer = PTP900(connection)
 
 image = Image.open("label.png")
-label = Label(image, LaminatedTape36mm)
+label = Label(image, Tape36mm)
 printer.print(label, margin_mm=3.0)
 ```
 
 #### USB Connection
 
 ```python
-from ptouch import ConnectionUSB, PTE550W, TextLabel, LaminatedTape12mm
+from ptouch import ConnectionUSB, PTE550W, TextLabel, Tape12mm
 
 connection = ConnectionUSB()
 printer = PTE550W(connection)
 
 label = TextLabel(
     "USB Label",
-    LaminatedTape12mm,
+    Tape12mm,
     font="/path/to/font.ttf",
 )
 printer.print(label)
@@ -230,15 +230,15 @@ printer.print(label)
 Print multiple labels in a single job with half-cuts between labels to save tape:
 
 ```python
-from ptouch import ConnectionNetwork, PTP900, TextLabel, LaminatedTape12mm
+from ptouch import ConnectionNetwork, PTP900, TextLabel, Tape12mm
 
 connection = ConnectionNetwork("192.168.1.100")
 printer = PTP900(connection)
 
 labels = [
-    TextLabel("Label 1", LaminatedTape12mm, font="/path/to/font.ttf"),
-    TextLabel("Label 2", LaminatedTape12mm, font="/path/to/font.ttf"),
-    TextLabel("Label 3", LaminatedTape12mm, font="/path/to/font.ttf"),
+    TextLabel("Label 1", Tape12mm, font="/path/to/font.ttf"),
+    TextLabel("Label 2", Tape12mm, font="/path/to/font.ttf"),
+    TextLabel("Label 3", Tape12mm, font="/path/to/font.ttf"),
 ]
 
 # Half-cuts between labels (default), full cut after last

@@ -12,11 +12,11 @@ from ptouch.printer import TapeConfig
 from ptouch.printer import MediaType
 from ptouch.printers import PTE550W, PTP750W, PTP900
 from ptouch.tape import (
-    LaminatedTape3_5mm,
-    LaminatedTape6mm,
-    LaminatedTape12mm,
-    LaminatedTape24mm,
-    LaminatedTape36mm,
+    Tape3_5mm,
+    Tape6mm,
+    Tape12mm,
+    Tape24mm,
+    Tape36mm,
 )
 
 from .conftest import MockConnection
@@ -65,17 +65,17 @@ class TestPTE550W:
 
     def test_pin_configs(self) -> None:
         """Test that PIN_CONFIGS contains expected tape types."""
-        assert LaminatedTape3_5mm in PTE550W.PIN_CONFIGS
-        assert LaminatedTape6mm in PTE550W.PIN_CONFIGS
-        assert LaminatedTape12mm in PTE550W.PIN_CONFIGS
-        assert LaminatedTape24mm in PTE550W.PIN_CONFIGS
+        assert Tape3_5mm in PTE550W.PIN_CONFIGS
+        assert Tape6mm in PTE550W.PIN_CONFIGS
+        assert Tape12mm in PTE550W.PIN_CONFIGS
+        assert Tape24mm in PTE550W.PIN_CONFIGS
         # E550W doesn't support 36mm
-        assert LaminatedTape36mm not in PTE550W.PIN_CONFIGS
+        assert Tape36mm not in PTE550W.PIN_CONFIGS
 
     def test_get_tape_config(self, mock_connection: MockConnection) -> None:
         """Test getting tape configuration."""
         printer = PTE550W(mock_connection)
-        tape = LaminatedTape12mm()
+        tape = Tape12mm()
         config = printer.get_tape_config(tape)
         assert isinstance(config, TapeConfig)
         assert config.left_pins == 29
@@ -87,7 +87,7 @@ class TestPTE550W:
     def test_get_tape_config_unsupported_tape(self, mock_connection: MockConnection) -> None:
         """Test that unsupported tape raises ValueError."""
         printer = PTE550W(mock_connection)
-        tape = LaminatedTape36mm()
+        tape = Tape36mm()
         with pytest.raises(ValueError, match="not supported"):
             printer.get_tape_config(tape)
 
@@ -118,13 +118,13 @@ class TestPTP900:
 
     def test_supports_36mm_tape(self) -> None:
         """Test that P900 supports 36mm tape."""
-        assert LaminatedTape3_5mm in PTP900.PIN_CONFIGS
-        assert LaminatedTape36mm in PTP900.PIN_CONFIGS
+        assert Tape3_5mm in PTP900.PIN_CONFIGS
+        assert Tape36mm in PTP900.PIN_CONFIGS
 
     def test_get_tape_config_36mm(self, mock_connection: MockConnection) -> None:
         """Test getting 36mm tape configuration."""
         printer = PTP900(mock_connection)
-        tape = LaminatedTape36mm()
+        tape = Tape36mm()
         config = printer.get_tape_config(tape)
         assert config.left_pins == 45
         assert config.print_pins == 454
@@ -219,7 +219,7 @@ class TestLabelPrinterPrint:
     ) -> None:
         """Test that print sends data to the connection."""
         printer = PTE550W(mock_connection, use_compression=True)
-        label = Label(sample_image_with_content, LaminatedTape12mm)
+        label = Label(sample_image_with_content, Tape12mm)
         printer.print(label)
         # Should have sent data
         assert len(mock_connection.data) > 0
@@ -231,7 +231,7 @@ class TestLabelPrinterPrint:
     ) -> None:
         """Test print with custom margin."""
         printer = PTE550W(mock_connection)
-        label = Label(sample_image, LaminatedTape12mm)
+        label = Label(sample_image, Tape12mm)
         printer.print(label, margin_mm=5.0)
         assert len(mock_connection.data) > 0
 
@@ -240,7 +240,7 @@ class TestLabelPrinterPrint:
     ) -> None:
         """Test that margin below minimum raises ValueError."""
         printer = PTE550W(mock_connection)
-        label = Label(sample_image, LaminatedTape12mm)
+        label = Label(sample_image, Tape12mm)
         with pytest.raises(ValueError, match="Margin must be between"):
             printer.print(label, margin_mm=0.5)
 
@@ -249,7 +249,7 @@ class TestLabelPrinterPrint:
     ) -> None:
         """Test that margin above maximum raises ValueError."""
         printer = PTE550W(mock_connection)
-        label = Label(sample_image, LaminatedTape12mm)
+        label = Label(sample_image, Tape12mm)
         with pytest.raises(ValueError, match="Margin must be between"):
             printer.print(label, margin_mm=200.0)
 
@@ -258,7 +258,7 @@ class TestLabelPrinterPrint:
     ) -> None:
         """Test that printing with unsupported tape raises ValueError."""
         printer = PTE550W(mock_connection)
-        label = Label(sample_image, LaminatedTape36mm)  # E550W doesn't support 36mm
+        label = Label(sample_image, Tape36mm)  # E550W doesn't support 36mm
         with pytest.raises(ValueError, match="not supported"):
             printer.print(label)
 
@@ -267,7 +267,7 @@ class TestLabelPrinterPrint:
     ) -> None:
         """Test printing in high resolution mode."""
         printer = PTE550W(mock_connection)
-        label = Label(sample_image, LaminatedTape12mm)
+        label = Label(sample_image, Tape12mm)
         printer.print(label, high_resolution=True)
         assert len(mock_connection.data) > 0
 
@@ -276,7 +276,7 @@ class TestLabelPrinterPrint:
     ) -> None:
         """Test that print data ends with print command (0x1a) and initialize."""
         printer = PTE550W(mock_connection, use_compression=True)
-        label = Label(sample_image, LaminatedTape12mm)
+        label = Label(sample_image, Tape12mm)
         printer.print(label)
         # Should contain print command
         assert b"\x1a" in mock_connection.data
@@ -289,7 +289,7 @@ class TestImagePreparation:
         """Test that _prepare_image returns a 1-bit image."""
         printer = PTE550W(mock_connection)
         img = Image.new("RGB", (100, 50), color=(255, 255, 255))
-        tape = LaminatedTape12mm()
+        tape = Tape12mm()
         config = printer.get_tape_config(tape)
         img_1bit = printer._prepare_image(img, config)
         assert img_1bit.mode == "1"
@@ -298,7 +298,7 @@ class TestImagePreparation:
         """Test that prepared image height matches print_pins."""
         printer = PTE550W(mock_connection)
         img = Image.new("RGB", (100, 50), color=(255, 255, 255))
-        tape = LaminatedTape12mm()
+        tape = Tape12mm()
         config = printer.get_tape_config(tape)
         img_1bit = printer._prepare_image(img, config)
         assert img_1bit.height == config.print_pins
@@ -307,7 +307,7 @@ class TestImagePreparation:
         """Test that raster data has correct length."""
         printer = PTE550W(mock_connection)
         img = Image.new("RGB", (100, 50), color=(255, 255, 255))
-        tape = LaminatedTape12mm()
+        tape = Tape12mm()
         config = printer.get_tape_config(tape)
         img_1bit = printer._prepare_image(img, config)
         raster = printer._generate_raster(img_1bit, config)
@@ -325,8 +325,8 @@ class TestLabelPrinterPrintMulti:
         """Test that print_multi sends data to the connection."""
         printer = PTE550W(mock_connection, use_compression=True)
         labels = [
-            Label(sample_image, LaminatedTape12mm),
-            Label(sample_image, LaminatedTape12mm),
+            Label(sample_image, Tape12mm),
+            Label(sample_image, Tape12mm),
         ]
         printer.print_multi(labels)
         # Should have sent data
@@ -339,7 +339,7 @@ class TestLabelPrinterPrintMulti:
     ) -> None:
         """Test that print_multi with a single label works correctly."""
         printer = PTE550W(mock_connection, use_compression=True)
-        labels = [Label(sample_image, LaminatedTape12mm)]
+        labels = [Label(sample_image, Tape12mm)]
         printer.print_multi(labels)
         # Should have sent data
         assert len(mock_connection.data) > 0
@@ -358,8 +358,8 @@ class TestLabelPrinterPrintMulti:
         """Test that print_multi with different tape types raises ValueError."""
         printer = PTE550W(mock_connection)
         labels = [
-            Label(sample_image, LaminatedTape12mm),
-            Label(sample_image, LaminatedTape6mm),
+            Label(sample_image, Tape12mm),
+            Label(sample_image, Tape6mm),
         ]
         with pytest.raises(ValueError, match="same tape type"):
             printer.print_multi(labels)
@@ -370,8 +370,8 @@ class TestLabelPrinterPrintMulti:
         """Test that multi-label print has form feed (0x0C) between labels."""
         printer = PTE550W(mock_connection, use_compression=True)
         labels = [
-            Label(sample_image, LaminatedTape12mm),
-            Label(sample_image, LaminatedTape12mm),
+            Label(sample_image, Tape12mm),
+            Label(sample_image, Tape12mm),
         ]
         printer.print_multi(labels)
         # Form feed (0x0C) should appear between labels (not at end)
@@ -383,8 +383,8 @@ class TestLabelPrinterPrintMulti:
         """Test that multi-label print ends with print command (0x1a)."""
         printer = PTE550W(mock_connection, use_compression=True)
         labels = [
-            Label(sample_image, LaminatedTape12mm),
-            Label(sample_image, LaminatedTape12mm),
+            Label(sample_image, Tape12mm),
+            Label(sample_image, Tape12mm),
         ]
         printer.print_multi(labels)
         # Should contain final print command
@@ -396,8 +396,8 @@ class TestLabelPrinterPrintMulti:
         """Test that printing with unsupported tape raises ValueError."""
         printer = PTE550W(mock_connection)
         labels = [
-            Label(sample_image, LaminatedTape36mm),  # E550W doesn't support 36mm
-            Label(sample_image, LaminatedTape36mm),
+            Label(sample_image, Tape36mm),  # E550W doesn't support 36mm
+            Label(sample_image, Tape36mm),
         ]
         with pytest.raises(ValueError, match="not supported"):
             printer.print_multi(labels)
@@ -408,8 +408,8 @@ class TestLabelPrinterPrintMulti:
         """Test print_multi with custom margin."""
         printer = PTE550W(mock_connection)
         labels = [
-            Label(sample_image, LaminatedTape12mm),
-            Label(sample_image, LaminatedTape12mm),
+            Label(sample_image, Tape12mm),
+            Label(sample_image, Tape12mm),
         ]
         printer.print_multi(labels, margin_mm=5.0)
         assert len(mock_connection.data) > 0
@@ -420,8 +420,8 @@ class TestLabelPrinterPrintMulti:
         """Test print_multi in high resolution mode."""
         printer = PTE550W(mock_connection)
         labels = [
-            Label(sample_image, LaminatedTape12mm),
-            Label(sample_image, LaminatedTape12mm),
+            Label(sample_image, Tape12mm),
+            Label(sample_image, Tape12mm),
         ]
         printer.print_multi(labels, high_resolution=True)
         assert len(mock_connection.data) > 0

@@ -28,14 +28,14 @@ Quick Example
 
 .. code-block:: python
 
-   from ptouch import ConnectionNetwork, PTP900, TextLabel, LaminatedTape36mm
+   from ptouch import ConnectionNetwork, PTP900, TextLabel, Tape36mm
    from PIL import ImageFont
 
    connection = ConnectionNetwork("192.168.1.100")
    printer = PTP900(connection, high_resolution=True)
 
    font = ImageFont.load_default()
-   label = TextLabel("Hello World", LaminatedTape36mm, font=font)
+   label = TextLabel("Hello World", Tape36mm, font=font)
    printer.print(label)
 
 Documentation

@@ -15,32 +15,32 @@ from . import (
     ConnectionNetwork,
     ConnectionUSB,
     Label,
-    LaminatedTape3_5mm,
-    LaminatedTape6mm,
-    LaminatedTape9mm,
-    LaminatedTape12mm,
-    LaminatedTape18mm,
-    LaminatedTape24mm,
-    LaminatedTape36mm,
     PTE550W,
     PTP750W,
     PTP900,
     PTP900W,
     PTP910BT,
     PTP950NW,
+    Tape3_5mm,
+    Tape6mm,
+    Tape9mm,
+    Tape12mm,
+    Tape18mm,
+    Tape24mm,
+    Tape36mm,
     TextLabel,
 )
 from .printer import LabelPrinter
 
 # Mapping of tape width (mm) to tape classes
 TAPE_WIDTHS = {
-    3.5: LaminatedTape3_5mm,
-    6: LaminatedTape6mm,
-    9: LaminatedTape9mm,
-    12: LaminatedTape12mm,
-    18: LaminatedTape18mm,
-    24: LaminatedTape24mm,
-    36: LaminatedTape36mm,
+    3.5: Tape3_5mm,
+    6: Tape6mm,
+    9: Tape9mm,
+    12: Tape12mm,
+    18: Tape18mm,
+    24: Tape24mm,
+    36: Tape36mm,
 }
 
 # Mapping of printer names to printer classes

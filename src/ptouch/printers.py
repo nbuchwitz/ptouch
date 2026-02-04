@@ -6,13 +6,13 @@
 
 from .printer import LabelPrinter, TapeConfig
 from .tape import (
-    LaminatedTape3_5mm,
-    LaminatedTape6mm,
-    LaminatedTape9mm,
-    LaminatedTape12mm,
-    LaminatedTape18mm,
-    LaminatedTape24mm,
-    LaminatedTape36mm,
+    Tape3_5mm,
+    Tape6mm,
+    Tape9mm,
+    Tape12mm,
+    Tape18mm,
+    Tape24mm,
+    Tape36mm,
 )
 
 
@@ -34,12 +34,12 @@ class PTE550W(LabelPrinter):
     # Pin configurations from official Brother PT-E550W specification document
     # Source: cv_pte550wp750wp710bt_eng_raster_102.pdf, page 20, section "2.3 Print Area"
     PIN_CONFIGS = {
-        LaminatedTape3_5mm: TapeConfig(left_pins=52, print_pins=24, right_pins=52),
-        LaminatedTape6mm: TapeConfig(left_pins=48, print_pins=32, right_pins=48),
-        LaminatedTape9mm: TapeConfig(left_pins=39, print_pins=50, right_pins=39),
-        LaminatedTape12mm: TapeConfig(left_pins=29, print_pins=70, right_pins=29),
-        LaminatedTape18mm: TapeConfig(left_pins=8, print_pins=112, right_pins=8),
-        LaminatedTape24mm: TapeConfig(left_pins=0, print_pins=128, right_pins=0),
+        Tape3_5mm: TapeConfig(left_pins=52, print_pins=24, right_pins=52),
+        Tape6mm: TapeConfig(left_pins=48, print_pins=32, right_pins=48),
+        Tape9mm: TapeConfig(left_pins=39, print_pins=50, right_pins=39),
+        Tape12mm: TapeConfig(left_pins=29, print_pins=70, right_pins=29),
+        Tape18mm: TapeConfig(left_pins=8, print_pins=112, right_pins=8),
+        Tape24mm: TapeConfig(left_pins=0, print_pins=128, right_pins=0),
     }
 
 
@@ -68,13 +68,13 @@ class PTP900Series(LabelPrinter):
     # Pin configurations from official Brother PT-P900 specification document
     # Source: cv_ptp900_eng_raster_102.pdf, pages 23-24, section 2.3.5 "Raster line"
     PIN_CONFIGS = {
-        LaminatedTape3_5mm: TapeConfig(left_pins=248, print_pins=48, right_pins=264),
-        LaminatedTape6mm: TapeConfig(left_pins=240, print_pins=64, right_pins=256),
-        LaminatedTape9mm: TapeConfig(left_pins=219, print_pins=106, right_pins=235),
-        LaminatedTape12mm: TapeConfig(left_pins=197, print_pins=150, right_pins=213),
-        LaminatedTape18mm: TapeConfig(left_pins=155, print_pins=234, right_pins=171),
-        LaminatedTape24mm: TapeConfig(left_pins=112, print_pins=320, right_pins=128),
-        LaminatedTape36mm: TapeConfig(left_pins=45, print_pins=454, right_pins=61),
+        Tape3_5mm: TapeConfig(left_pins=248, print_pins=48, right_pins=264),
+        Tape6mm: TapeConfig(left_pins=240, print_pins=64, right_pins=256),
+        Tape9mm: TapeConfig(left_pins=219, print_pins=106, right_pins=235),
+        Tape12mm: TapeConfig(left_pins=197, print_pins=150, right_pins=213),
+        Tape18mm: TapeConfig(left_pins=155, print_pins=234, right_pins=171),
+        Tape24mm: TapeConfig(left_pins=112, print_pins=320, right_pins=128),
+        Tape36mm: TapeConfig(left_pins=45, print_pins=454, right_pins=61),
     }
 
 

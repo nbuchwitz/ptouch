@@ -30,7 +30,7 @@ class Label:
         image : PIL.Image.Image
             The image to print.
         tape : type[Tape] | Tape
-            The tape class (e.g., LaminatedTape36mm) or instance.
+            The tape class (e.g., Tape36mm) or instance.
         """
         self.image = image
         self.tape = tape() if isinstance(tape, type) else tape
@@ -87,7 +87,7 @@ class TextLabel(Label):
         text : str
             Text to render.
         tape : type[Tape] | Tape
-            The tape class (e.g., LaminatedTape36mm) or instance.
+            The tape class (e.g., Tape36mm) or instance.
         font : str or ImageFont.FreeTypeFont
             Path to TrueType font file, or a pre-loaded ImageFont object.
         font_size : int or None, optional

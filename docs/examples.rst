@@ -10,7 +10,7 @@ Create sequential asset tags:
 
 .. code-block:: python
 
-   from ptouch import ConnectionNetwork, PTP900, TextLabel, LaminatedTape12mm
+   from ptouch import ConnectionNetwork, PTP900, TextLabel, Tape12mm
    from PIL import ImageFont
 
    connection = ConnectionNetwork("192.168.1.100")
@@ -22,7 +22,7 @@ Create sequential asset tags:
    for i in range(1, 101):
        label = TextLabel(
            f"ASSET-{i:04d}",
-           LaminatedTape12mm,
+           Tape12mm,
            font=font,
            align=TextLabel.Align.CENTER
        )
@@ -38,7 +38,7 @@ Create matching pairs for cable ends:
 
 .. code-block:: python
 
-   from ptouch import ConnectionUSB, PTE550W, TextLabel, LaminatedTape9mm
+   from ptouch import ConnectionUSB, PTE550W, TextLabel, Tape9mm
    from PIL import ImageFont
 
    connection = ConnectionUSB()
@@ -53,8 +53,8 @@ Create matching pairs for cable ends:
 
    for cable_a, cable_b in cables:
        # Print both ends
-       label_a = TextLabel(cable_a, LaminatedTape9mm, font=font)
-       label_b = TextLabel(cable_b, LaminatedTape9mm, font=font)
+       label_a = TextLabel(cable_a, Tape9mm, font=font)
+       label_b = TextLabel(cable_b, Tape9mm, font=font)
        printer.print_multi([label_a, label_b])
 
 Server Rack Labels
@@ -92,7 +92,7 @@ Create detailed server identification labels:
        return img
 
    # Generate labels
-   from ptouch import Label, LaminatedTape36mm
+   from ptouch import Label, Tape36mm
 
    servers = [
        ("web-prod-01", "10.0.1.10", "R1-U12"),
@@ -103,7 +103,7 @@ Create detailed server identification labels:
    labels = []
    for hostname, ip, location in servers:
        img = create_server_label(hostname, ip, location)
-       labels.append(Label(img, LaminatedTape36mm))
+       labels.append(Label(img, Tape36mm))
 
    printer.print_multi(labels)
 
@@ -167,7 +167,7 @@ Create QR code labels for inventory tracking:
    labels = []
    for item_id, name, location in items:
        img = create_inventory_label(item_id, name, location)
-       labels.append(Label(img, LaminatedTape36mm))
+       labels.append(Label(img, Tape36mm))
 
    printer.print_multi(labels)
 
@@ -213,7 +213,7 @@ Create attention-grabbing warning labels:
        return img
 
    warnings = ["CAUTION", "HIGH VOLTAGE", "DO NOT TOUCH"]
-   labels = [Label(create_warning_label(w), LaminatedTape36mm) for w in warnings]
+   labels = [Label(create_warning_label(w), Tape36mm) for w in warnings]
    printer.print_multi(labels)
 
 Batch Processing from CSV
@@ -224,7 +224,7 @@ Read label data from CSV file:
 .. code-block:: python
 
    import csv
-   from ptouch import TextLabel, LaminatedTape12mm
+   from ptouch import TextLabel, Tape12mm
 
    def process_csv_labels(csv_file, printer):
        labels = []
@@ -238,7 +238,7 @@ Read label data from CSV file:
 
                label = TextLabel(
                    text,
-                   LaminatedTape12mm,
+                   Tape12mm,
                    font=ImageFont.load_default(),
                    width_mm=width_mm
                )
@@ -269,7 +269,7 @@ Generate labels for device configurations:
 .. code-block:: python
 
    import yaml
-   from ptouch import TextLabel, Label, LaminatedTape18mm
+   from ptouch import TextLabel, Label, Tape18mm
    from PIL import Image, ImageDraw, ImageFont
 
    def load_device_config(yaml_file):
@@ -298,7 +298,7 @@ Generate labels for device configurations:
            draw.text((10, y), line, font=font, fill="black")
            y += line_height
 
-       return Label(img, LaminatedTape18mm)
+       return Label(img, Tape18mm)
 
    # Load and print
    config = load_device_config("devices.yaml")
@@ -344,7 +344,7 @@ Create Code39 barcodes (using python-barcode library):
        buffer.seek(0)
        img = Image.open(buffer)
 
-       return Label(img.convert("RGB"), LaminatedTape12mm)
+       return Label(img.convert("RGB"), Tape12mm)
 
    # Generate barcode labels
    codes = ["ABC123", "DEF456", "GHI789"]
@@ -371,15 +371,15 @@ Simple interactive CLI for making labels:
            tape_width = int(tape_width) if tape_width else 12
 
            tape_map = {
-               6: LaminatedTape6mm,
-               9: LaminatedTape9mm,
-               12: LaminatedTape12mm,
-               18: LaminatedTape18mm,
-               24: LaminatedTape24mm,
-               36: LaminatedTape36mm,
+               6: Tape6mm,
+               9: Tape9mm,
+               12: Tape12mm,
+               18: Tape18mm,
+               24: Tape24mm,
+               36: Tape36mm,
            }
 
-           tape = tape_map.get(tape_width, LaminatedTape12mm)
+           tape = tape_map.get(tape_width, Tape12mm)
 
            label = TextLabel(
                text,

@@ -162,10 +162,10 @@ Misaligned Labels
    .. code-block:: python
 
       # Wrong: Using 12mm tape but specified 24mm
-      label = TextLabel("Text", LaminatedTape24mm, font=font)
+      label = TextLabel("Text", Tape24mm, font=font)
 
       # Correct: Match actual tape in printer
-      label = TextLabel("Text", LaminatedTape12mm, font=font)
+      label = TextLabel("Text", Tape12mm, font=font)
 
 2. **Wrong printer class**
 
@@ -237,7 +237,7 @@ Incomplete Labels
    .. code-block:: python
 
       # For text labels, auto-sizing should work
-      label = TextLabel("Text", LaminatedTape12mm, font=font)  # Auto-sized
+      label = TextLabel("Text", Tape12mm, font=font)  # Auto-sized
 
       # For image labels, ensure image isn't too wide
       max_width_mm = 100  # Adjust based on your needs
@@ -477,11 +477,11 @@ Slow Printing
 
       # Slow: Individual prints
       for text in texts:
-          label = TextLabel(text, LaminatedTape12mm, font=font)
+          label = TextLabel(text, Tape12mm, font=font)
           printer.print(label)
 
       # Fast: Batch printing
-      labels = [TextLabel(t, LaminatedTape12mm, font=font) for t in texts]
+      labels = [TextLabel(t, Tape12mm, font=font) for t in texts]
       printer.print_multi(labels)
 
 Getting More Help
