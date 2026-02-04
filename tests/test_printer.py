@@ -92,6 +92,38 @@ class TestPTE550W:
             printer.get_tape_config(tape)
 
 
+class TestSupportedTapes:
+    """Test supported_tapes property."""
+
+    def test_supported_tapes_returns_list(self, mock_connection: MockConnection) -> None:
+        """Test that supported_tapes returns a list of tape classes."""
+        printer = PTE550W(mock_connection)
+        tapes = printer.supported_tapes
+        assert isinstance(tapes, list)
+        assert len(tapes) > 0
+        assert Tape6mm in tapes
+        assert Tape12mm in tapes
+        assert Tape24mm in tapes
+
+    def test_supported_tapes_sorted_by_name(self, mock_connection: MockConnection) -> None:
+        """Test that supported_tapes are sorted by class name."""
+        printer = PTE550W(mock_connection)
+        tapes = printer.supported_tapes
+        names = [t.__name__ for t in tapes]
+        assert names == sorted(names)
+
+    def test_supported_tapes_excludes_unsupported(self, mock_connection: MockConnection) -> None:
+        """Test that E550W doesn't include 36mm tape."""
+        printer = PTE550W(mock_connection)
+        tapes = printer.supported_tapes
+        assert Tape36mm not in tapes
+
+    def test_p900_supports_36mm(self, mock_connection: MockConnection) -> None:
+        """Test that P900 includes 36mm tape."""
+        printer = PTP900(mock_connection)
+        assert Tape36mm in printer.supported_tapes
+
+
 class TestPTP750W:
     """Test PTP750W printer class."""
 
