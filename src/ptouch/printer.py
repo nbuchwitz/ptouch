@@ -96,6 +96,17 @@ class LabelPrinter(ABC):
         """Whether the printer supports high resolution mode."""
         return self.RESOLUTION_DPI_HIGH > 0
 
+    @property
+    def supported_tapes(self) -> list[type[Tape]]:
+        """Get list of tape types supported by this printer.
+
+        Returns
+        -------
+        list[type[Tape]]
+            List of supported tape classes, sorted by name.
+        """
+        return sorted(self.PIN_CONFIGS.keys(), key=lambda t: t.__name__)
+
     # Margin constraints in mm. See manual section "2.3.3 Feed amount".
     MIN_MARGIN_MM: float = 2.0
     MAX_MARGIN_MM: float = 127.0

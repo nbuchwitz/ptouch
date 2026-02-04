@@ -97,9 +97,10 @@ Checking Tape Compatibility
 
    printer = PTE550W(connection)
 
-   try:
-       config = printer.get_tape_config(Tape36mm)
-   except KeyError:
+   # Check if tape is supported
+   if Tape36mm in printer.supported_tapes:
+       print("Tape is supported")
+   else:
        print("This tape is not compatible with this printer")
 
 Available Tape Widths
@@ -112,8 +113,7 @@ Available Tape Widths
    printer = PTP900(connection)
 
    # Get all supported tape types
-   supported_tapes = printer.PIN_CONFIGS.keys()
-   for tape_type in supported_tapes:
+   for tape_type in printer.supported_tapes:
        print(f"Supported: {tape_type.__name__} ({tape_type.width_mm}mm)")
 
 Adding Custom Tape Types
