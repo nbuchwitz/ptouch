@@ -12,21 +12,21 @@ The tape module provides tape type definitions for Brother P-touch label printer
 Supported Tapes
 ---------------
 
-Laminated Tapes (TZe Series)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+TZe Series Tapes
+~~~~~~~~~~~~~~~~
 
-Laminated tapes are the most common tape type for Brother P-touch printers.
+TZe tapes are the most common tape type for Brother P-touch printers.
 
 Available Widths
 ^^^^^^^^^^^^^^^^
 
-* ``LaminatedTape3_5mm`` - 3.5mm laminated tape
-* ``LaminatedTape6mm`` - 6mm laminated tape
-* ``LaminatedTape9mm`` - 9mm laminated tape
-* ``LaminatedTape12mm`` - 12mm laminated tape
-* ``LaminatedTape18mm`` - 18mm laminated tape
-* ``LaminatedTape24mm`` - 24mm laminated tape
-* ``LaminatedTape36mm`` - 36mm laminated tape (P900 series only)
+* ``Tape3_5mm`` - 3.5mm tape
+* ``Tape6mm`` - 6mm tape
+* ``Tape9mm`` - 9mm tape
+* ``Tape12mm`` - 12mm tape
+* ``Tape18mm`` - 18mm tape
+* ``Tape24mm`` - 24mm tape
+* ``Tape36mm`` - 36mm tape (P900 series only)
 
 Compatibility
 ^^^^^^^^^^^^^
@@ -81,24 +81,24 @@ Specifying Tape Type
 
 .. code-block:: python
 
-   from ptouch import TextLabel, LaminatedTape36mm
+   from ptouch import TextLabel, Tape36mm
    from PIL import ImageFont
 
    # Create label with 36mm tape
    font = ImageFont.load_default()
-   label = TextLabel("Text", LaminatedTape36mm, font=font)
+   label = TextLabel("Text", Tape36mm, font=font)
 
 Checking Tape Compatibility
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code-block:: python
 
-   from ptouch import PTE550W, LaminatedTape36mm
+   from ptouch import PTE550W, Tape36mm
 
    printer = PTE550W(connection)
 
    try:
-       config = printer.get_tape_config(LaminatedTape36mm)
+       config = printer.get_tape_config(Tape36mm)
    except KeyError:
        print("This tape is not compatible with this printer")
 
@@ -125,10 +125,10 @@ Example:
 
 .. code-block:: python
 
-   from ptouch.tape import LaminatedTape
+   from ptouch.tape import Tape
 
-   class LaminatedTape48mm(LaminatedTape):
-       """48mm laminated tape."""
+   class Tape48mm(Tape):
+       """48mm tape."""
        width_mm = 48
 
 Then add the pin configuration to your printer class:
@@ -138,7 +138,7 @@ Then add the pin configuration to your printer class:
    from ptouch.printer import TapeConfig
 
    PIN_CONFIGS = {
-       LaminatedTape48mm: TapeConfig(
+       Tape48mm: TapeConfig(
            left_pins=0,
            print_pins=680,
            right_pins=0

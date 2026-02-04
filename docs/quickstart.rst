@@ -13,7 +13,7 @@ The simplest way to get started is with a network-connected printer:
 
 .. code-block:: python
 
-   from ptouch import ConnectionNetwork, PTP900, TextLabel, LaminatedTape36mm
+   from ptouch import ConnectionNetwork, PTP900, TextLabel, Tape36mm
    from PIL import ImageFont
 
    # Connect to printer
@@ -22,7 +22,7 @@ The simplest way to get started is with a network-connected printer:
 
    # Create text label
    font = ImageFont.load_default()  # Use PIL's default font
-   label = TextLabel("Hello World", LaminatedTape36mm, font=font)
+   label = TextLabel("Hello World", Tape36mm, font=font)
 
    # Print!
    printer.print(label)
@@ -35,7 +35,7 @@ For USB-connected printers:
 
 .. code-block:: python
 
-   from ptouch import ConnectionUSB, PTE550W, TextLabel, LaminatedTape12mm
+   from ptouch import ConnectionUSB, PTE550W, TextLabel, Tape12mm
    from PIL import ImageFont
 
    # Connect via USB (finds first available Brother printer)
@@ -44,7 +44,7 @@ For USB-connected printers:
 
    # Create and print label
    font = ImageFont.load_default()
-   label = TextLabel("Hello USB", LaminatedTape12mm, font=font)
+   label = TextLabel("Hello USB", Tape12mm, font=font)
    printer.print(label)
 
 Using the Command Line
@@ -71,7 +71,7 @@ The library includes a command-line interface:
 Understanding the Basics
 -------------------------
 
-The library provides printer classes for different Brother P-touch models (``PTE550W``, ``PTP750W``, ``PTP900``, etc.) and tape types (``LaminatedTape3_5mm`` through ``LaminatedTape36mm``). See :doc:`api/printer` for complete printer specifications and :doc:`api/tape` for tape compatibility.
+The library provides printer classes for different Brother P-touch models (``PTE550W``, ``PTP750W``, ``PTP900``, etc.) and tape types (``Tape3_5mm`` through ``Tape36mm``). See :doc:`api/printer` for complete printer specifications and :doc:`api/tape` for tape compatibility.
 
 Error Handling
 --------------

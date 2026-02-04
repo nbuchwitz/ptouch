@@ -192,7 +192,7 @@ For grayscale images, apply dithering for better results:
    img = img.convert("1", dither=Image.FLOYDSTEINBERG)
 
    # Print
-   label = Label(img.convert("RGB"), LaminatedTape36mm)
+   label = Label(img.convert("RGB"), Tape36mm)
    printer.print(label)
 
 Batch Processing Optimization
@@ -264,7 +264,7 @@ For complete control over raster data:
    from ptouch.printer import LabelPrinter
 
    # Access internal methods (use with caution)
-   tape_config = printer.get_tape_config(LaminatedTape36mm)
+   tape_config = printer.get_tape_config(Tape36mm)
 
    # Generate custom raster data
    # Each line must be tape_config.print_pins bits

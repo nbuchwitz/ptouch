@@ -13,14 +13,14 @@ Create a simple text label with default settings:
 
 .. code-block:: python
 
-   from ptouch import ConnectionNetwork, PTP900, TextLabel, LaminatedTape36mm
+   from ptouch import ConnectionNetwork, PTP900, TextLabel, Tape36mm
    from PIL import ImageFont
 
    connection = ConnectionNetwork("192.168.1.100")
    printer = PTP900(connection)
 
    font = ImageFont.load_default()
-   label = TextLabel("Hello World", LaminatedTape36mm, font=font)
+   label = TextLabel("Hello World", Tape36mm, font=font)
    printer.print(label)
 
 Custom Font and Size
@@ -36,10 +36,10 @@ Use TrueType fonts with custom sizes:
    font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 48)
 
    # Auto-sizing is disabled when font has explicit size
-   label = TextLabel("Custom Font", LaminatedTape36mm, font=font, auto_size=False)
+   label = TextLabel("Custom Font", Tape36mm, font=font, auto_size=False)
 
    # Or let the library auto-size to 80% of tape height
-   label = TextLabel("Auto Sized", LaminatedTape36mm, font=font, auto_size=True)
+   label = TextLabel("Auto Sized", Tape36mm, font=font, auto_size=True)
 
 Text Alignment
 ~~~~~~~~~~~~~~
@@ -54,21 +54,21 @@ Control horizontal and vertical alignment:
 
    label = TextLabel(
        "Centered",
-       LaminatedTape36mm,
+       Tape36mm,
        font=font,
        align=TextLabel.Align.CENTER  # Center both ways
    )
 
    label = TextLabel(
        "Top Left",
-       LaminatedTape36mm,
+       Tape36mm,
        font=font,
        align=TextLabel.Align.LEFT | TextLabel.Align.TOP
    )
 
    label = TextLabel(
        "Bottom Right",
-       LaminatedTape36mm,
+       Tape36mm,
        font=font,
        align=TextLabel.Align.RIGHT | TextLabel.Align.BOTTOM
    )
@@ -83,7 +83,7 @@ Create labels with specific width:
    # Create 50mm wide label (useful for consistent sizing)
    label = TextLabel(
        "Short",
-       LaminatedTape36mm,
+       Tape36mm,
        font=font,
        width_mm=50.0
    )
@@ -99,13 +99,13 @@ Print images directly:
 .. code-block:: python
 
    from PIL import Image
-   from ptouch import Label, LaminatedTape36mm
+   from ptouch import Label, Tape36mm
 
    # Load image
    image = Image.open("logo.png")
 
    # Create label and print
-   label = Label(image, LaminatedTape36mm)
+   label = Label(image, Tape36mm)
    printer.print(label, margin_mm=3.0)
 
 Creating Custom Images
@@ -130,7 +130,7 @@ Generate labels programmatically:
    draw.rectangle([10, 10, 790, 444], outline="black", width=3)
 
    # Print
-   label = Label(img, LaminatedTape36mm)
+   label = Label(img, Tape36mm)
    printer.print(label)
 
 QR Code Labels
@@ -151,7 +151,7 @@ Create QR code labels:
    img = qr.make_image(fill_color="black", back_color="white")
 
    # Print
-   label = Label(img.convert("RGB"), LaminatedTape36mm)
+   label = Label(img.convert("RGB"), Tape36mm)
    printer.print(label)
 
 Multi-Label Printing
@@ -165,9 +165,9 @@ Save tape by using half-cuts between labels:
 .. code-block:: python
 
    labels = [
-       TextLabel("Server 1", LaminatedTape12mm, font=font),
-       TextLabel("Server 2", LaminatedTape12mm, font=font),
-       TextLabel("Server 3", LaminatedTape12mm, font=font),
+       TextLabel("Server 1", Tape12mm, font=font),
+       TextLabel("Server 2", Tape12mm, font=font),
+       TextLabel("Server 3", Tape12mm, font=font),
    ]
 
    # Half-cut between labels (default), full cut after last
@@ -191,7 +191,7 @@ Python:
 .. code-block:: python
 
    for i in range(5):
-       label = TextLabel(f"Asset {i:03d}", LaminatedTape12mm, font=font)
+       label = TextLabel(f"Asset {i:03d}", Tape12mm, font=font)
        printer.print(label)
 
 Connection Management

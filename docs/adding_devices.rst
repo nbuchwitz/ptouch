@@ -64,11 +64,11 @@ Create a new class in ``src/ptouch/printers.py``:
 
    from ptouch.printer import LabelPrinter, TapeConfig
    from ptouch.tape import (
-       LaminatedTape6mm,
-       LaminatedTape9mm,
-       LaminatedTape12mm,
-       LaminatedTape18mm,
-       LaminatedTape24mm,
+       Tape6mm,
+       Tape9mm,
+       Tape12mm,
+       Tape18mm,
+       Tape24mm,
    )
 
    class PTP710BT(LabelPrinter):
@@ -105,27 +105,27 @@ Create a new class in ``src/ptouch/printers.py``:
        # Pin configuration for each tape width
        # Values from Brother raster command reference
        PIN_CONFIGS = {
-           LaminatedTape6mm: TapeConfig(
+           Tape6mm: TapeConfig(
                left_pins=48,
                print_pins=32,
                right_pins=48
            ),
-           LaminatedTape9mm: TapeConfig(
+           Tape9mm: TapeConfig(
                left_pins=39,
                print_pins=50,
                right_pins=39
            ),
-           LaminatedTape12mm: TapeConfig(
+           Tape12mm: TapeConfig(
                left_pins=29,
                print_pins=70,
                right_pins=29
            ),
-           LaminatedTape18mm: TapeConfig(
+           Tape18mm: TapeConfig(
                left_pins=8,
                print_pins=112,
                right_pins=8
            ),
-           LaminatedTape24mm: TapeConfig(
+           Tape24mm: TapeConfig(
                left_pins=0,
                print_pins=128,
                right_pins=0
@@ -172,7 +172,7 @@ Create tests in ``tests/test_printers.py``:
        printer = PTP710BT(mock_connection)
 
        # Test each tape size
-       config = printer.get_tape_config(LaminatedTape12mm)
+       config = printer.get_tape_config(Tape12mm)
        assert config.left_pins == 29
        assert config.print_pins == 70
        assert config.right_pins == 29
@@ -181,7 +181,7 @@ Create tests in ``tests/test_printers.py``:
    def test_ptp710bt_printing():
        """Test basic printing with PTP710BT."""
        printer = PTP710BT(mock_connection)
-       label = Label(sample_image, LaminatedTape12mm)
+       label = Label(sample_image, Tape12mm)
 
        printer.print(label)
        assert len(mock_connection.data) > 0
@@ -242,7 +242,7 @@ Add to ``src/ptouch/tape.py``:
 
 .. code-block:: python
 
-   class LaminatedTape48mm(LaminatedTape):
+   class Tape48mm(Tape):
        """48mm laminated tape (TZe-481, etc.).
 
        Compatible with larger industrial printers only.
@@ -263,14 +263,14 @@ For non-laminated tape:
            """Tape category identifier."""
            pass
 
-   class NonLaminatedTape(Tape):
+   class NonTape(Tape):
        """Non-laminated (N) series tapes."""
 
        @property
        def category(self) -> str:
            return "non-laminated"
 
-   class NonLaminatedTape12mm(NonLaminatedTape):
+   class NonTape12mm(NonTape):
        """12mm non-laminated tape."""
        width_mm = 12
 
@@ -284,7 +284,7 @@ Update each compatible printer's ``PIN_CONFIGS``:
    class PTP900(PTP900Series):
        PIN_CONFIGS = {
            # ... existing configs ...
-           LaminatedTape48mm: TapeConfig(
+           Tape48mm: TapeConfig(
                left_pins=0,
                print_pins=680,  # Example - check reference manual
                right_pins=0
@@ -312,12 +312,12 @@ Add to ``src/ptouch/__init__.py``:
 
    from .tape import (
        # ... existing imports ...
-       LaminatedTape48mm,
+       Tape48mm,
    )
 
    __all__ = [
        # ... existing exports ...
-       "LaminatedTape48mm",
+       "Tape48mm",
    ]
 
 Test with your printer:
@@ -326,7 +326,7 @@ Test with your printer:
 
    def test_new_tape():
        printer = PTP900(mock_connection)
-       label = Label(sample_image, LaminatedTape48mm)
+       label = Label(sample_image, Tape48mm)
        printer.print(label)
 
 Testing Your Changes
@@ -350,7 +350,7 @@ Test with actual printer:
 
 .. code-block:: python
 
-   from ptouch import ConnectionUSB, PTP710BT, TextLabel, LaminatedTape12mm
+   from ptouch import ConnectionUSB, PTP710BT, TextLabel, Tape12mm
    from PIL import ImageFont
 
    # Test basic functionality
@@ -359,7 +359,7 @@ Test with actual printer:
 
    label = TextLabel(
        "Test Label",
-       LaminatedTape12mm,
+       Tape12mm,
        font=ImageFont.load_default()
    )
 

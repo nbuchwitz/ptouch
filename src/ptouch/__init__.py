@@ -17,10 +17,10 @@ Supported printers:
     - PT-P950NW (560 pins, 360 DPI)
 
 Example usage:
-    >>> from ptouch import PTP900W, ConnectionNetwork, LaminatedTape36mm, TextLabel
+    >>> from ptouch import PTP900W, ConnectionNetwork, Tape36mm, TextLabel
     >>> conn = ConnectionNetwork("192.168.1.100")
     >>> printer = PTP900W(conn)
-    >>> label = TextLabel("Hello, World!", LaminatedTape36mm)
+    >>> label = TextLabel("Hello, World!", Tape36mm)
     >>> printer.print(label)
 """
 
@@ -40,6 +40,7 @@ from .printer import LabelPrinter, MediaType, TapeConfig
 from .printers import PTE550W, PTP750W, PTP900, PTP900W, PTP910BT, PTP950NW
 from .tape import (
     HeatShrinkTape,
+    # Deprecated aliases (use Tape*mm instead)
     LaminatedTape,
     LaminatedTape3_5mm,
     LaminatedTape6mm,
@@ -49,6 +50,13 @@ from .tape import (
     LaminatedTape24mm,
     LaminatedTape36mm,
     Tape,
+    Tape3_5mm,
+    Tape6mm,
+    Tape9mm,
+    Tape12mm,
+    Tape18mm,
+    Tape24mm,
+    Tape36mm,
 )
 
 __version__ = "1.0.0"
@@ -81,6 +89,15 @@ __all__ = [
     "PTP950NW",
     # Tapes
     "Tape",
+    "Tape3_5mm",
+    "Tape6mm",
+    "Tape9mm",
+    "Tape12mm",
+    "Tape18mm",
+    "Tape24mm",
+    "Tape36mm",
+    "HeatShrinkTape",
+    # Deprecated tape aliases (use Tape*mm instead)
     "LaminatedTape",
     "LaminatedTape3_5mm",
     "LaminatedTape6mm",
@@ -89,7 +106,6 @@ __all__ = [
     "LaminatedTape18mm",
     "LaminatedTape24mm",
     "LaminatedTape36mm",
-    "HeatShrinkTape",
     # Labels
     "Label",
     "TextLabel",

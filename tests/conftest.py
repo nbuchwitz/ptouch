@@ -8,10 +8,10 @@ import pytest
 from PIL import Image
 
 from ptouch import (
-    LaminatedTape6mm,
-    LaminatedTape12mm,
-    LaminatedTape24mm,
-    LaminatedTape36mm,
+    Tape6mm,
+    Tape12mm,
+    Tape24mm,
+    Tape36mm,
 )
 from ptouch.connection import Connection
 
@@ -63,24 +63,24 @@ def sample_image_with_content() -> Image.Image:
 
 
 @pytest.fixture
-def tape_6mm() -> LaminatedTape6mm:
-    """Provide a 6mm laminated tape instance."""
-    return LaminatedTape6mm()
+def tape_6mm() -> Tape6mm:
+    """Provide a 6mm tape instance."""
+    return Tape6mm()
 
 
 @pytest.fixture
-def tape_12mm() -> LaminatedTape12mm:
-    """Provide a 12mm laminated tape instance."""
-    return LaminatedTape12mm()
+def tape_12mm() -> Tape12mm:
+    """Provide a 12mm tape instance."""
+    return Tape12mm()
 
 
 @pytest.fixture
-def tape_24mm() -> LaminatedTape24mm:
-    """Provide a 24mm laminated tape instance."""
-    return LaminatedTape24mm()
+def tape_24mm() -> Tape24mm:
+    """Provide a 24mm tape instance."""
+    return Tape24mm()
 
 
 @pytest.fixture
-def tape_36mm() -> LaminatedTape36mm:
-    """Provide a 36mm laminated tape instance."""
-    return LaminatedTape36mm()
+def tape_36mm() -> Tape36mm:
+    """Provide a 36mm tape instance."""
+    return Tape36mm()

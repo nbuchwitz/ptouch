@@ -20,7 +20,7 @@ Base class for image-based labels. Use this when you have a pre-rendered image.
 **Key attributes:**
 
 * ``image`` - PIL Image object
-* ``tape`` - Tape type (e.g., ``LaminatedTape36mm``)
+* ``tape`` - Tape type (e.g., ``Tape36mm``)
 
 TextLabel
 ~~~~~~~~~
@@ -69,10 +69,10 @@ Image Label
 .. code-block:: python
 
    from PIL import Image
-   from ptouch import Label, LaminatedTape36mm
+   from ptouch import Label, Tape36mm
 
    image = Image.open("logo.png")
-   label = Label(image, LaminatedTape36mm)
+   label = Label(image, Tape36mm)
    printer.print(label)
 
 Text Label with Auto-Sizing
@@ -80,13 +80,13 @@ Text Label with Auto-Sizing
 
 .. code-block:: python
 
-   from ptouch import TextLabel, LaminatedTape36mm
+   from ptouch import TextLabel, Tape36mm
    from PIL import ImageFont
 
    font = ImageFont.load_default()
    label = TextLabel(
        "Hello World",
-       LaminatedTape36mm,
+       Tape36mm,
        font=font,
        align=TextLabel.Align.CENTER
    )
@@ -99,7 +99,7 @@ Text Label with Fixed Size
    font = ImageFont.truetype("/path/to/font.ttf", 48)
    label = TextLabel(
        "Fixed Size",
-       LaminatedTape36mm,
+       Tape36mm,
        font=font,
        auto_size=False,  # Use font's built-in size
        align=TextLabel.Align.LEFT | TextLabel.Align.TOP
@@ -112,7 +112,7 @@ Text Label with Fixed Width
 
    label = TextLabel(
        "Short",
-       LaminatedTape36mm,
+       Tape36mm,
        font=font,
        width_mm=50.0  # Create 50mm wide label
    )
@@ -125,7 +125,7 @@ Custom Alignment
    # Top-left alignment
    label = TextLabel(
        "Top Left",
-       LaminatedTape36mm,
+       Tape36mm,
        font=font,
        align=TextLabel.Align.LEFT | TextLabel.Align.TOP
    )
@@ -133,7 +133,7 @@ Custom Alignment
    # Bottom-right alignment
    label = TextLabel(
        "Bottom Right",
-       LaminatedTape36mm,
+       Tape36mm,
        font=font,
        align=TextLabel.Align.RIGHT | TextLabel.Align.BOTTOM
    )
@@ -141,7 +141,7 @@ Custom Alignment
    # Centered (shorthand)
    label = TextLabel(
        "Centered",
-       LaminatedTape36mm,
+       Tape36mm,
        font=font,
        align=TextLabel.Align.CENTER
    )

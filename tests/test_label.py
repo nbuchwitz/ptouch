@@ -8,7 +8,7 @@ import pytest
 from PIL import Image, ImageFont
 
 from ptouch.label import Align, Label, TextLabel
-from ptouch.tape import LaminatedTape12mm, LaminatedTape36mm
+from ptouch.tape import Tape12mm, Tape36mm
 
 
 class TestAlign:
@@ -64,14 +64,14 @@ class TestLabel:
 
     def test_label_with_tape_class(self, sample_image: Image.Image) -> None:
         """Test Label initialization with tape class."""
-        label = Label(sample_image, LaminatedTape36mm)
+        label = Label(sample_image, Tape36mm)
         assert label.image is sample_image
-        assert isinstance(label.tape, LaminatedTape36mm)
+        assert isinstance(label.tape, Tape36mm)
         assert label.tape.width_mm == 36
 
     def test_label_with_tape_instance(self, sample_image: Image.Image) -> None:
         """Test Label initialization with tape instance."""
-        tape = LaminatedTape12mm()
+        tape = Tape12mm()
         label = Label(sample_image, tape)
         assert label.image is sample_image
         assert label.tape is tape
@@ -79,7 +79,7 @@ class TestLabel:
 
     def test_label_prepare_is_noop(self, sample_image: Image.Image) -> None:
         """Test that Label.prepare() does nothing (base implementation)."""
-        label = Label(sample_image, LaminatedTape36mm)
+        label = Label(sample_image, Tape36mm)
         # Should not raise
         label.prepare(100)
         # Image should be unchanged
@@ -109,40 +109,40 @@ class TestTextLabel:
 
     def test_text_label_initialization_with_tape_class(self, font_path: str) -> None:
         """Test TextLabel initialization with tape class."""
-        label = TextLabel("Hello", LaminatedTape36mm, font_path)
+        label = TextLabel("Hello", Tape36mm, font_path)
         assert label.text == "Hello"
-        assert isinstance(label.tape, LaminatedTape36mm)
+        assert isinstance(label.tape, Tape36mm)
         assert label.font == font_path
         assert label.font_size is None
         assert label.align == TextLabel.Align.CENTER
 
     def test_text_label_initialization_with_tape_instance(self, font_path: str) -> None:
         """Test TextLabel initialization with tape instance."""
-        tape = LaminatedTape12mm()
+        tape = Tape12mm()
         label = TextLabel("World", tape, font_path)
         assert label.text == "World"
         assert label.tape is tape
 
     def test_text_label_initialization_with_custom_font_size(self, font_path: str) -> None:
         """Test TextLabel initialization with custom font size."""
-        label = TextLabel("Test", LaminatedTape36mm, font_path, font_size=48)
+        label = TextLabel("Test", Tape36mm, font_path, font_size=48)
         assert label.font_size == 48
 
     def test_text_label_initialization_with_custom_align(self, font_path: str) -> None:
         """Test TextLabel initialization with custom alignment."""
         align = TextLabel.Align.LEFT | TextLabel.Align.TOP
-        label = TextLabel("Test", LaminatedTape36mm, font_path, align=align)
+        label = TextLabel("Test", Tape36mm, font_path, align=align)
         assert label.align == align
 
     def test_text_label_image_raises_before_prepare(self, font_path: str) -> None:
         """Test that accessing image before prepare() raises RuntimeError."""
-        label = TextLabel("Hello", LaminatedTape36mm, font_path)
+        label = TextLabel("Hello", Tape36mm, font_path)
         with pytest.raises(RuntimeError, match="not been rendered yet"):
             _ = label.image
 
     def test_text_label_prepare_renders_image(self, font_path: str) -> None:
         """Test that prepare() renders the text to an image."""
-        label = TextLabel("Hello", LaminatedTape36mm, font_path)
+        label = TextLabel("Hello", Tape36mm, font_path)
         label.prepare(height=100)
         img = label.image
         assert isinstance(img, Image.Image)
@@ -151,7 +151,7 @@ class TestTextLabel:
 
     def test_text_label_prepare_uses_default_font_size(self, font_path: str) -> None:
         """Test that prepare() uses 80% of height as default font size."""
-        label = TextLabel("Test", LaminatedTape36mm, font_path)
+        label = TextLabel("Test", Tape36mm, font_path)
         label.prepare(height=100)
         # Font size should be 80 (80% of 100)
         # We can't directly check font size, but the image should be rendered
@@ -159,7 +159,7 @@ class TestTextLabel:
 
     def test_text_label_prepare_is_idempotent(self, font_path: str) -> None:
         """Test that calling prepare() multiple times doesn't re-render."""
-        label = TextLabel("Hello", LaminatedTape36mm, font_path)
+        label = TextLabel("Hello", Tape36mm, font_path)
         label.prepare(height=100)
         img1 = label.image
         label.prepare(height=200)  # Different height, but should not re-render
@@ -168,7 +168,7 @@ class TestTextLabel:
 
     def test_text_label_image_is_rgb(self, font_path: str) -> None:
         """Test that rendered image is RGB mode."""
-        label = TextLabel("Hello", LaminatedTape36mm, font_path)
+        label = TextLabel("Hello", Tape36mm, font_path)
         label.prepare(height=100)
         assert label.image.mode == "RGB"
 
@@ -183,21 +183,21 @@ class TestTextLabel:
             Align.LEFT | Align.VCENTER,
         ]
         for align in alignments:
-            label = TextLabel("Test", LaminatedTape36mm, font_path, align=align)
+            label = TextLabel("Test", Tape36mm, font_path, align=align)
             label.prepare(height=100)
             assert isinstance(label.image, Image.Image)
 
     def test_text_label_with_imagefont(self, font_path: str) -> None:
         """Test TextLabel initialization with ImageFont object."""
         font = ImageFont.truetype(font_path, size=24)
-        label = TextLabel("Hello", LaminatedTape36mm, font)
+        label = TextLabel("Hello", Tape36mm, font)
         assert label.font is font
         label.prepare(height=100)
         assert isinstance(label.image, Image.Image)
 
     def test_text_label_with_min_width_mm(self, font_path: str) -> None:
         """Test TextLabel with min_width_mm parameter."""
-        label = TextLabel("X", LaminatedTape36mm, font_path, min_width_mm=50.0)
+        label = TextLabel("X", Tape36mm, font_path, min_width_mm=50.0)
         assert label.min_width_mm == 50.0
         label.prepare(height=100, resolution_dpi=180)
         # 50mm at 180 DPI = 50 * 180 / 25.4 ≈ 354 pixels minimum
@@ -206,18 +206,18 @@ class TestTextLabel:
     def test_text_label_invalid_font_type_raises_valueerror(self) -> None:
         """Test that invalid font type raises ValueError."""
         with pytest.raises(ValueError, match="font must be a path string or ImageFont"):
-            TextLabel("Hello", LaminatedTape36mm, 123)  # type: ignore[arg-type]
+            TextLabel("Hello", Tape36mm, 123)  # type: ignore[arg-type]
 
     def test_text_label_auto_size_true_scales_font(self, font_path: str) -> None:
         """Test that auto_size=True scales font to 80% of height."""
-        label = TextLabel("Hello", LaminatedTape36mm, font_path, auto_size=True)
+        label = TextLabel("Hello", Tape36mm, font_path, auto_size=True)
         label.prepare(height=100)
         # Font should be auto-sized, image should be rendered
         assert isinstance(label.image, Image.Image)
 
     def test_text_label_auto_size_false_uses_font_size(self, font_path: str) -> None:
         """Test that auto_size=False uses explicit font_size."""
-        label = TextLabel("Hello", LaminatedTape36mm, font_path, font_size=24, auto_size=False)
+        label = TextLabel("Hello", Tape36mm, font_path, font_size=24, auto_size=False)
         assert label.auto_size is False
         assert label.font_size == 24
         label.prepare(height=100)
@@ -226,7 +226,7 @@ class TestTextLabel:
     def test_text_label_auto_size_false_with_imagefont(self, font_path: str) -> None:
         """Test that auto_size=False uses ImageFont's built-in size."""
         font = ImageFont.truetype(font_path, size=24)
-        label = TextLabel("Hello", LaminatedTape36mm, font, auto_size=False)
+        label = TextLabel("Hello", Tape36mm, font, auto_size=False)
         assert label.auto_size is False
         label.prepare(height=100)
         assert isinstance(label.image, Image.Image)
