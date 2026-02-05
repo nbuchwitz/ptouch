@@ -44,12 +44,26 @@ class PTE550W(LabelPrinter):
     # Pin configurations from official Brother PT-E550W specification document
     # Source: cv_pte550wp750wp710bt_eng_raster_102.pdf, page 20, section "2.3 Print Area"
     PIN_CONFIGS = {
+        # Laminated tapes (TZe series)
         Tape3_5mm: TapeConfig(left_pins=52, print_pins=24, right_pins=52),
         Tape6mm: TapeConfig(left_pins=48, print_pins=32, right_pins=48),
         Tape9mm: TapeConfig(left_pins=39, print_pins=50, right_pins=39),
         Tape12mm: TapeConfig(left_pins=29, print_pins=70, right_pins=29),
         Tape18mm: TapeConfig(left_pins=8, print_pins=112, right_pins=8),
         Tape24mm: TapeConfig(left_pins=0, print_pins=128, right_pins=0),
+        # Heat shrink tubes 2:1 series (HSe)
+        # Source: cv_pte550wp750wp710bt_eng_raster_102.pdf, page 20, section "2.3 Print Area"
+        HeatShrinkTube5_8mm: TapeConfig(left_pins=50, print_pins=28, right_pins=50),
+        HeatShrinkTube8_8mm: TapeConfig(left_pins=40, print_pins=48, right_pins=40),
+        HeatShrinkTube11_7mm: TapeConfig(left_pins=31, print_pins=66, right_pins=31),
+        HeatShrinkTube17_7mm: TapeConfig(left_pins=11, print_pins=106, right_pins=11),
+        HeatShrinkTube23_6mm: TapeConfig(left_pins=0, print_pins=128, right_pins=0),
+        # Heat shrink tubes 3:1 series (HSe)
+        HeatShrinkTube3_1_5_2mm: TapeConfig(left_pins=54, print_pins=20, right_pins=54),
+        HeatShrinkTube3_1_9_0mm: TapeConfig(left_pins=42, print_pins=44, right_pins=42),
+        HeatShrinkTube3_1_11_2mm: TapeConfig(left_pins=39, print_pins=50, right_pins=39),
+        HeatShrinkTube3_1_21_0mm: TapeConfig(left_pins=4, print_pins=120, right_pins=4),
+        # Note: PT-E550W/P750W do NOT support 31.0mm 3:1 tubes
     }
 
 
