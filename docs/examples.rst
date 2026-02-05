@@ -60,7 +60,7 @@ Create matching pairs for cable ends:
 Heat Shrink Tube Cable Labels
 ------------------------------
 
-Create labels for cables using heat shrink tubes (PT-P900/P900W/P950NW only):
+Create labels for cables using heat shrink tubes (PT-E550W/P750W/P900/P900W/P950NW):
 
 .. code-block:: python
 

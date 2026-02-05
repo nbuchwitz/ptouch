@@ -52,7 +52,7 @@ Compatibility
 HSe Series Heat Shrink Tubes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Heat shrink tubes are cylindrical media that shrink when heated to wrap around cables and wires for durable, professional labeling. Only supported on PT-P900, PT-P900W, and PT-P950NW.
+Heat shrink tubes are cylindrical media that shrink when heated to wrap around cables and wires for durable, professional labeling. Supported on PT-E550W, PT-P750W, PT-P900, PT-P900W, and PT-P950NW.
 
 Available Sizes - 2:1 Series
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -78,8 +78,12 @@ Compatibility
 +-----------+----------+----------+----------+----------+----------+
 | Tube Size | E550W    | P750W    | P900     | P900W    | P950NW   |
 +===========+==========+==========+==========+==========+==========+
-| All HSe   | ✗        | ✗        | ✓        | ✓        | ✓        |
+| 2:1 (all) | ✓        | ✓        | ✓        | ✓        | ✓        |
 +-----------+----------+----------+----------+----------+----------+
+| 3:1 (all) | ✓*       | ✓*       | ✓        | ✓        | ✓        |
++-----------+----------+----------+----------+----------+----------+
+
+\* E550W and P750W do not support the 31.0mm 3:1 tube
 
 .. note::
    PT-P910BT does **not** support heat shrink tubes due to hardware limitations.
