@@ -49,6 +49,61 @@ Compatibility
 | 36mm       | ✗        | ✗        | ✓        |
 +------------+----------+----------+----------+
 
+HSe Series Heat Shrink Tubes
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Heat shrink tubes are cylindrical media that shrink when heated to wrap around cables and wires for durable, professional labeling. Only supported on PT-P900, PT-P900W, and PT-P950NW.
+
+Available Sizes - 2:1 Series
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* ``HeatShrinkTube5_8mm`` - 5.8mm tube (shrinks to 1/2 diameter)
+* ``HeatShrinkTube8_8mm`` - 8.8mm tube
+* ``HeatShrinkTube11_7mm`` - 11.7mm tube
+* ``HeatShrinkTube17_7mm`` - 17.7mm tube
+* ``HeatShrinkTube23_6mm`` - 23.6mm tube
+
+Available Sizes - 3:1 Series
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* ``HeatShrinkTube3_1_5_2mm`` - 5.2mm tube (shrinks to 1/3 diameter)
+* ``HeatShrinkTube3_1_9_0mm`` - 9.0mm tube
+* ``HeatShrinkTube3_1_11_2mm`` - 11.2mm tube
+* ``HeatShrinkTube3_1_21_0mm`` - 21.0mm tube
+* ``HeatShrinkTube3_1_31_0mm`` - 31.0mm tube
+
+Compatibility
+^^^^^^^^^^^^^
+
++-----------+----------+----------+----------+----------+----------+
+| Tube Size | E550W    | P750W    | P900     | P900W    | P950NW   |
++===========+==========+==========+==========+==========+==========+
+| All HSe   | ✗        | ✗        | ✓        | ✓        | ✓        |
++-----------+----------+----------+----------+----------+----------+
+
+.. note::
+   PT-P910BT does **not** support heat shrink tubes due to hardware limitations.
+
+Usage Example
+^^^^^^^^^^^^^
+
+.. code-block:: python
+
+   from ptouch import PTP900, TextLabel, HeatShrinkTube5_8mm
+   from PIL import ImageFont
+
+   printer = PTP900(connection)
+   font = ImageFont.truetype("/path/to/font.ttf", 36)
+
+   # Create label for heat shrink tube
+   label = TextLabel(
+       "ETH0",
+       HeatShrinkTube5_8mm,
+       font=font,
+       align=TextLabel.Align.CENTER
+   )
+   printer.print(label)
+
 Tape Configuration
 ------------------
 

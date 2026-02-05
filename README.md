@@ -13,6 +13,7 @@ A Python library for Brother P-touch label printers.
 - Text labels with customizable fonts and alignment
 - Image label printing
 - Multi-label printing with half-cut support (saves tape)
+- Heat shrink tube support (HSe 2:1 and 3:1 series on PT-P900/P900W/P950NW)
 - High resolution mode support
 - TIFF compression for efficient data transfer
 
@@ -56,9 +57,11 @@ Comprehensive documentation is available at [ptouch.readthedocs.io](https://ptou
 
 ### Tapes
 
-| Type | Widths | Class |
-|------|--------|-------|
-| TZe | 3.5mm, 6mm, 9mm, 12mm, 18mm, 24mm, 36mm | `Tape*mm` |
+| Type | Widths | Class | Notes |
+|------|--------|-------|-------|
+| TZe (Laminated) | 3.5mm, 6mm, 9mm, 12mm, 18mm, 24mm, 36mm | `Tape*mm` | All printers |
+| HSe 2:1 (Heat Shrink) | 5.8mm, 8.8mm, 11.7mm, 17.7mm, 23.6mm | `HeatShrinkTube*mm` | P900/P900W/P950NW only |
+| HSe 3:1 (Heat Shrink) | 5.2mm, 9.0mm, 11.2mm, 21.0mm, 31.0mm | `HeatShrinkTube3_1_*mm` | P900/P900W/P950NW only |
 
 ## Adding Support for New Devices
 

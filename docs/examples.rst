@@ -57,6 +57,63 @@ Create matching pairs for cable ends:
        label_b = TextLabel(cable_b, Tape9mm, font=font)
        printer.print_multi([label_a, label_b])
 
+Heat Shrink Tube Cable Labels
+------------------------------
+
+Create labels for cables using heat shrink tubes (PT-P900/P900W/P950NW only):
+
+.. code-block:: python
+
+   from ptouch import (
+       ConnectionNetwork,
+       PTP900,
+       TextLabel,
+       HeatShrinkTube5_8mm,      # 2:1 series
+       HeatShrinkTube3_1_9_0mm,  # 3:1 series
+   )
+   from PIL import ImageFont
+
+   connection = ConnectionNetwork("192.168.1.100")
+   printer = PTP900(connection)
+   font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 36)
+
+   # Small cables - 2:1 heat shrink (5.8mm)
+   small_cables = ["ETH0", "ETH1", "USB", "PWR"]
+   labels = []
+   for text in small_cables:
+       label = TextLabel(
+           text,
+           HeatShrinkTube5_8mm,
+           font=font,
+           align=TextLabel.Align.CENTER
+       )
+       labels.append(label)
+
+   printer.print_multi(labels, half_cut=True)
+
+   # Larger cables - 3:1 heat shrink (9.0mm)
+   large_cables = ["MAIN POWER", "GROUND", "DATA"]
+   labels = []
+   for text in large_cables:
+       label = TextLabel(
+           text,
+           HeatShrinkTube3_1_9_0mm,
+           font=font,
+           align=TextLabel.Align.CENTER
+       )
+       labels.append(label)
+
+   printer.print_multi(labels, half_cut=True)
+
+**Available heat shrink tube sizes:**
+
+* 2:1 series (shrinks to 1/2 diameter): 5.8mm, 8.8mm, 11.7mm, 17.7mm, 23.6mm
+* 3:1 series (shrinks to 1/3 diameter): 5.2mm, 9.0mm, 11.2mm, 21.0mm, 31.0mm
+
+.. note::
+   Heat shrink tubes are cylindrical media designed to shrink when heated,
+   wrapping around cables and wires for durable, professional labeling.
+
 Server Rack Labels
 ------------------
 
