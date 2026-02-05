@@ -67,14 +67,86 @@ class Tape36mm(Tape):
     width_mm = 36
 
 
-class HeatShrinkTape(Tape):
-    """Base class for heat shrink tube tapes (HSe series).
+class HeatShrinkTube(Tape):
+    """Base class for heat shrink tubes (HSe series).
 
     Heat shrink tubes shrink when heated to wrap around cables and wires.
     They have different printable area constraints than laminated tapes.
+
+    Note: Heat shrink tubes are NOT supported on PT-P910BT.
     """
 
     pass
+
+
+# =============================================================================
+# Heat Shrink Tube 2:1 Series (shrinks to 1/2 original diameter)
+# =============================================================================
+
+
+class HeatShrinkTube5_8mm(HeatShrinkTube):
+    """5.8mm heat shrink tube (2:1 series)."""
+
+    width_mm = 6  # Media size reported by printer
+
+
+class HeatShrinkTube8_8mm(HeatShrinkTube):
+    """8.8mm heat shrink tube (2:1 series)."""
+
+    width_mm = 9  # Media size reported by printer
+
+
+class HeatShrinkTube11_7mm(HeatShrinkTube):
+    """11.7mm heat shrink tube (2:1 series)."""
+
+    width_mm = 12  # Media size reported by printer
+
+
+class HeatShrinkTube17_7mm(HeatShrinkTube):
+    """17.7mm heat shrink tube (2:1 series)."""
+
+    width_mm = 18  # Media size reported by printer
+
+
+class HeatShrinkTube23_6mm(HeatShrinkTube):
+    """23.6mm heat shrink tube (2:1 series)."""
+
+    width_mm = 24  # Media size reported by printer
+
+
+# =============================================================================
+# Heat Shrink Tube 3:1 Series (shrinks to 1/3 original diameter)
+# =============================================================================
+
+
+class HeatShrinkTube3_1_5_2mm(HeatShrinkTube):
+    """5.2mm heat shrink tube (3:1 series)."""
+
+    width_mm = 5  # Media size reported by printer
+
+
+class HeatShrinkTube3_1_9_0mm(HeatShrinkTube):
+    """9.0mm heat shrink tube (3:1 series)."""
+
+    width_mm = 9  # Media size reported by printer
+
+
+class HeatShrinkTube3_1_11_2mm(HeatShrinkTube):
+    """11.2mm heat shrink tube (3:1 series)."""
+
+    width_mm = 11  # Media size reported by printer
+
+
+class HeatShrinkTube3_1_21_0mm(HeatShrinkTube):
+    """21.0mm heat shrink tube (3:1 series)."""
+
+    width_mm = 21  # Media size reported by printer
+
+
+class HeatShrinkTube3_1_31_0mm(HeatShrinkTube):
+    """31.0mm heat shrink tube (3:1 series)."""
+
+    width_mm = 31  # Media size reported by printer
 
 
 # =============================================================================

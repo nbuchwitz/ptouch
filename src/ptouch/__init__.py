@@ -40,7 +40,18 @@ from .label import Align, Label, TextLabel
 from .printer import LabelPrinter, MediaType, TapeConfig
 from .printers import PTE550W, PTP750W, PTP900, PTP900W, PTP910BT, PTP950NW
 from .tape import (
-    HeatShrinkTape,
+    # Heat shrink tubes (HSe series)
+    HeatShrinkTube,
+    HeatShrinkTube3_1_5_2mm,
+    HeatShrinkTube3_1_9_0mm,
+    HeatShrinkTube3_1_11_2mm,
+    HeatShrinkTube3_1_21_0mm,
+    HeatShrinkTube3_1_31_0mm,
+    HeatShrinkTube5_8mm,
+    HeatShrinkTube8_8mm,
+    HeatShrinkTube11_7mm,
+    HeatShrinkTube17_7mm,
+    HeatShrinkTube23_6mm,
     # Deprecated aliases (use Tape*mm instead)
     LaminatedTape,
     LaminatedTape3_5mm,
@@ -98,7 +109,18 @@ __all__ = [
     "Tape18mm",
     "Tape24mm",
     "Tape36mm",
-    "HeatShrinkTape",
+    # Heat shrink tubes (HSe series)
+    "HeatShrinkTube",
+    "HeatShrinkTube5_8mm",
+    "HeatShrinkTube8_8mm",
+    "HeatShrinkTube11_7mm",
+    "HeatShrinkTube17_7mm",
+    "HeatShrinkTube23_6mm",
+    "HeatShrinkTube3_1_5_2mm",
+    "HeatShrinkTube3_1_9_0mm",
+    "HeatShrinkTube3_1_11_2mm",
+    "HeatShrinkTube3_1_21_0mm",
+    "HeatShrinkTube3_1_31_0mm",
     # Deprecated tape aliases (use Tape*mm instead)
     "LaminatedTape",
     "LaminatedTape3_5mm",

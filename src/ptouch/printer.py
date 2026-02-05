@@ -16,7 +16,15 @@ from PIL import Image
 
 from .connection import Connection
 from .label import Label
-from .tape import Tape
+from .tape import (
+    HeatShrinkTube,
+    HeatShrinkTube3_1_5_2mm,
+    HeatShrinkTube3_1_9_0mm,
+    HeatShrinkTube3_1_11_2mm,
+    HeatShrinkTube3_1_21_0mm,
+    HeatShrinkTube3_1_31_0mm,
+    Tape,
+)
 
 
 @dataclass
@@ -44,7 +52,8 @@ class MediaType(Enum):
     NO_MEDIA = 0x00
     LAMINATED_TAPE = 0x01
     NONLAMINATED_TAPE = 0x03
-    HEATSHRINK_TUBE_21 = 0x11
+    HEATSHRINK_TUBE_21 = 0x11  # 2:1 shrink ratio
+    HEATSHRINK_TUBE_31 = 0x17  # 3:1 shrink ratio
     INCOMPATIBLE_TAPE = 0xFF
 
 
@@ -115,6 +124,38 @@ class LabelPrinter(ABC):
     def _mm_to_dots(self, mm: float) -> int:
         """Convert millimeters to dots at base resolution."""
         return round(mm * self.RESOLUTION_DPI / 25.4)
+
+    def _get_media_type(self, tape: Tape) -> MediaType:
+        """Determine the media type for a given tape.
+
+        Parameters
+        ----------
+        tape : Tape
+            The tape/tube to get media type for.
+
+        Returns
+        -------
+        MediaType
+            The appropriate media type for the tape.
+        """
+        # Check if it's a heat shrink tube
+        if isinstance(tape, HeatShrinkTube):
+            # 3:1 series tubes
+            if isinstance(
+                tape,
+                (
+                    HeatShrinkTube3_1_5_2mm,
+                    HeatShrinkTube3_1_9_0mm,
+                    HeatShrinkTube3_1_11_2mm,
+                    HeatShrinkTube3_1_21_0mm,
+                    HeatShrinkTube3_1_31_0mm,
+                ),
+            ):
+                return MediaType.HEATSHRINK_TUBE_31
+            # 2:1 series tubes (default for HeatShrinkTube)
+            return MediaType.HEATSHRINK_TUBE_21
+        # Default: let printer auto-detect (works for laminated tapes)
+        return MediaType.NO_MEDIA
 
     def __init__(
         self,
@@ -211,9 +252,10 @@ class LabelPrinter(ABC):
         bytes
             Command bytes for print information.
         """
+        PI_LENGTH = 0x02  # Length valid
         PI_WIDTH = 0x04  # Tape width valid
         PI_RECOVER = 0x80  # Recover mode (priority to print quality)
-        n1 = PI_RECOVER | PI_WIDTH
+        n1 = PI_RECOVER | PI_WIDTH | PI_LENGTH
 
         return struct.pack(
             "<7BL2B",
@@ -354,10 +396,9 @@ class LabelPrinter(ABC):
 
         # Create container image with proper height
         container_image = Image.new("RGB", (image.width, config.print_pins), (255, 255, 255))
-        # Compensate for asymmetric physical margins (left_pins vs right_pins)
-        # to center content on the physical tape, not just within print area
-        pin_offset = (config.right_pins - config.left_pins) // 2
-        y = (config.print_pins - image.height) // 2 + pin_offset
+        # Center content within the printable area
+        # Note: left_pins/right_pins in Brother specs already account for physical positioning
+        y = (config.print_pins - image.height) // 2
         container_image.paste(image, (0, y))
 
         # Convert to 1-bit with threshold
@@ -431,7 +472,7 @@ class LabelPrinter(ABC):
         self,
         num_lines: int,
         margin: int,
-        tape_width_mm: int,
+        tape: Tape,
         high_resolution: bool,
         is_first_page: bool,
         auto_cut: bool = True,
@@ -446,8 +487,8 @@ class LabelPrinter(ABC):
             Number of raster lines in the image.
         margin : int
             Margin in dots (normal resolution).
-        tape_width_mm : int
-            Tape width in millimeters.
+        tape : Tape
+            The tape/tube being used (for media type detection).
         high_resolution : bool
             Whether to use high resolution mode.
         is_first_page : bool
@@ -477,9 +518,9 @@ class LabelPrinter(ABC):
 
         control_seq += self._cmd_raster_mode()
         control_seq += self._additional_control_commands()
-        # Use NO_MEDIA to let printer auto-detect tape type
-        media_type = MediaType.NO_MEDIA
-        control_seq += self._cmd_print_information(num_lines, media_type, tape_width_mm)
+        # Determine media type from tape (important for heat shrink tubes)
+        media_type = self._get_media_type(tape)
+        control_seq += self._cmd_print_information(num_lines, media_type, tape.width_mm)
         control_seq += self._cmd_mode_settings(auto_cut=auto_cut)
         if auto_cut and self.SUPPORTS_PAGE_NUMBER_CUTS:
             control_seq += self._cmd_page_number_cuts(pages=1)
@@ -604,7 +645,7 @@ class LabelPrinter(ABC):
         control_seq = self._build_page_control_sequence(
             num_lines=num_lines,
             margin=margin_dots,
-            tape_width_mm=label.tape.width_mm,
+            tape=label.tape,
             high_resolution=high_res,
             is_first_page=False,
             auto_cut=auto_cut if auto_cut is not None else self.DEFAULT_AUTO_CUT,
