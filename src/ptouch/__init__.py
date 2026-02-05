@@ -71,7 +71,7 @@ from .tape import (
     Tape36mm,
 )
 
-__version__ = "1.0.0"
+__version__ = "1.1.0"
 
 __all__ = [
     # Version

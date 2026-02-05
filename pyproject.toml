@@ -5,7 +5,7 @@
 [project]
 name = "ptouch"
 description = "Python library for Brother P-touch label printers"
-version = "1.0.0"
+version = "1.1.0"
 readme = "README.md"
 authors = [{ name = "Nicolai Buchwitz", email = "nb@tipi-net.de" }]
 maintainers = [{ name = "Nicolai Buchwitz", email = "nb@tipi-net.de" }]
