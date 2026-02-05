@@ -220,10 +220,52 @@ USB Connection
    # Find first available Brother printer
    connection = ConnectionUSB()
 
-   # Specify vendor/product ID
+   # Specify product ID (vendor defaults to Brother 0x04f9)
+   connection = ConnectionUSB(product_id=0x2086)
+
+   # Connect to specific device by serial number (useful with multiple printers)
+   connection = ConnectionUSB(product_id=0x2086, serial="A1B2C3D4E5")
+
+   # Specify all parameters
    connection = ConnectionUSB(
-       vendor_id=0x04f9,  # Brother
-       product_id=0x20af  # PT-P900 series
+       vendor_id=0x04f9,
+       product_id=0x2086,
+       serial="A1B2C3D4E5"
+   )
+
+USB URI (CLI)
+~~~~~~~~~~~~~
+
+The CLI supports a URI format for specifying USB devices:
+
+.. code-block:: bash
+
+   # Basic USB connection (auto-detect)
+   ptouch "Hello" --usb --printer P950NW --tape-width 12
+
+   # Specify product ID
+   ptouch "Hello" --usb usb://:0x2086 --printer P950NW --tape-width 12
+
+   # Specify serial number (for multiple printers)
+   ptouch "Hello" --usb usb://:0x2086/A1B2C3D4E5 --printer P950NW --tape-width 12
+
+   # Full URI with vendor
+   ptouch "Hello" --usb usb://0x04f9:0x2086/A1B2C3D4E5 --printer P950NW --tape-width 12
+
+You can also parse USB URIs programmatically:
+
+.. code-block:: python
+
+   from ptouch import parse_usb_uri, ConnectionUSB
+
+   # Parse URI string
+   vendor_id, product_id, serial = parse_usb_uri("usb://:0x2086/A1B2C3D4E5")
+
+   # Create connection from parsed values
+   connection = ConnectionUSB(
+       vendor_id=vendor_id,
+       product_id=product_id,
+       serial=serial
    )
 
 Print Settings
