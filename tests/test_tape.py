@@ -7,7 +7,17 @@
 import pytest
 
 from ptouch.tape import (
-    HeatShrinkTape,
+    HeatShrinkTube,
+    HeatShrinkTube3_1_5_2mm,
+    HeatShrinkTube3_1_9_0mm,
+    HeatShrinkTube3_1_11_2mm,
+    HeatShrinkTube3_1_21_0mm,
+    HeatShrinkTube3_1_31_0mm,
+    HeatShrinkTube5_8mm,
+    HeatShrinkTube8_8mm,
+    HeatShrinkTube11_7mm,
+    HeatShrinkTube17_7mm,
+    HeatShrinkTube23_6mm,
     LaminatedTape,
     LaminatedTape3_5mm,
     LaminatedTape6mm,
@@ -67,9 +77,9 @@ class TestTapeWidths:
 class TestTapeInheritance:
     """Test tape class inheritance."""
 
-    def test_heat_shrink_tape_inherits_from_tape(self) -> None:
-        """Test that HeatShrinkTape inherits from Tape."""
-        assert issubclass(HeatShrinkTape, Tape)
+    def test_heat_shrink_tube_inherits_from_tape(self) -> None:
+        """Test that HeatShrinkTube inherits from Tape."""
+        assert issubclass(HeatShrinkTube, Tape)
 
     @pytest.mark.parametrize(
         "tape_class",
@@ -158,3 +168,110 @@ class TestDeprecatedAliases:
         """Test that deprecated aliases are subclasses of their new counterparts."""
         assert issubclass(deprecated_class, new_class)
         assert issubclass(deprecated_class, Tape)
+
+
+class TestHeatShrinkTubeWidths:
+    """Test heat shrink tube width attributes."""
+
+    @pytest.mark.parametrize(
+        "tube_class,expected_width",
+        [
+            # 2:1 series
+            (HeatShrinkTube5_8mm, 6),
+            (HeatShrinkTube8_8mm, 9),
+            (HeatShrinkTube11_7mm, 12),
+            (HeatShrinkTube17_7mm, 18),
+            (HeatShrinkTube23_6mm, 24),
+            # 3:1 series
+            (HeatShrinkTube3_1_5_2mm, 5),
+            (HeatShrinkTube3_1_9_0mm, 9),
+            (HeatShrinkTube3_1_11_2mm, 11),
+            (HeatShrinkTube3_1_21_0mm, 21),
+            (HeatShrinkTube3_1_31_0mm, 31),
+        ],
+    )
+    def test_heat_shrink_tube_width(
+        self, tube_class: type[HeatShrinkTube], expected_width: int
+    ) -> None:
+        """Test that heat shrink tube classes have correct width_mm."""
+        tube = tube_class()
+        assert tube.width_mm == expected_width
+
+    @pytest.mark.parametrize(
+        "tube_class,expected_width",
+        [
+            # 2:1 series
+            (HeatShrinkTube5_8mm, 6),
+            (HeatShrinkTube8_8mm, 9),
+            (HeatShrinkTube11_7mm, 12),
+            (HeatShrinkTube17_7mm, 18),
+            (HeatShrinkTube23_6mm, 24),
+            # 3:1 series
+            (HeatShrinkTube3_1_5_2mm, 5),
+            (HeatShrinkTube3_1_9_0mm, 9),
+            (HeatShrinkTube3_1_11_2mm, 11),
+            (HeatShrinkTube3_1_21_0mm, 21),
+            (HeatShrinkTube3_1_31_0mm, 31),
+        ],
+    )
+    def test_heat_shrink_tube_width_class_attribute(
+        self, tube_class: type[HeatShrinkTube], expected_width: int
+    ) -> None:
+        """Test that width_mm is accessible as class attribute."""
+        assert tube_class.width_mm == expected_width
+
+
+class TestHeatShrinkTubeInheritance:
+    """Test heat shrink tube class inheritance."""
+
+    @pytest.mark.parametrize(
+        "tube_class",
+        [
+            # 2:1 series
+            HeatShrinkTube5_8mm,
+            HeatShrinkTube8_8mm,
+            HeatShrinkTube11_7mm,
+            HeatShrinkTube17_7mm,
+            HeatShrinkTube23_6mm,
+            # 3:1 series
+            HeatShrinkTube3_1_5_2mm,
+            HeatShrinkTube3_1_9_0mm,
+            HeatShrinkTube3_1_11_2mm,
+            HeatShrinkTube3_1_21_0mm,
+            HeatShrinkTube3_1_31_0mm,
+        ],
+    )
+    def test_heat_shrink_tube_inherits_from_heat_shrink_tube_base(
+        self, tube_class: type[HeatShrinkTube]
+    ) -> None:
+        """Test that all heat shrink tube sizes inherit from HeatShrinkTube."""
+        assert issubclass(tube_class, HeatShrinkTube)
+        assert issubclass(tube_class, Tape)
+
+
+class TestHeatShrinkTubeInstantiation:
+    """Test heat shrink tube instantiation."""
+
+    @pytest.mark.parametrize(
+        "tube_class",
+        [
+            # 2:1 series
+            HeatShrinkTube5_8mm,
+            HeatShrinkTube8_8mm,
+            HeatShrinkTube11_7mm,
+            HeatShrinkTube17_7mm,
+            HeatShrinkTube23_6mm,
+            # 3:1 series
+            HeatShrinkTube3_1_5_2mm,
+            HeatShrinkTube3_1_9_0mm,
+            HeatShrinkTube3_1_11_2mm,
+            HeatShrinkTube3_1_21_0mm,
+            HeatShrinkTube3_1_31_0mm,
+        ],
+    )
+    def test_heat_shrink_tube_can_be_instantiated(self, tube_class: type[HeatShrinkTube]) -> None:
+        """Test that heat shrink tube classes can be instantiated."""
+        tube = tube_class()
+        assert isinstance(tube, tube_class)
+        assert isinstance(tube, HeatShrinkTube)
+        assert isinstance(tube, Tape)

@@ -6,6 +6,16 @@
 
 from .printer import LabelPrinter, TapeConfig
 from .tape import (
+    HeatShrinkTube3_1_5_2mm,
+    HeatShrinkTube3_1_9_0mm,
+    HeatShrinkTube3_1_11_2mm,
+    HeatShrinkTube3_1_21_0mm,
+    HeatShrinkTube3_1_31_0mm,
+    HeatShrinkTube5_8mm,
+    HeatShrinkTube8_8mm,
+    HeatShrinkTube11_7mm,
+    HeatShrinkTube17_7mm,
+    HeatShrinkTube23_6mm,
     Tape3_5mm,
     Tape6mm,
     Tape9mm,
@@ -68,6 +78,7 @@ class PTP900Series(LabelPrinter):
     # Pin configurations from official Brother PT-P900 specification document
     # Source: cv_ptp900_eng_raster_102.pdf, pages 23-24, section 2.3.5 "Raster line"
     PIN_CONFIGS = {
+        # Laminated tapes (TZe series)
         Tape3_5mm: TapeConfig(left_pins=248, print_pins=48, right_pins=264),
         Tape6mm: TapeConfig(left_pins=240, print_pins=64, right_pins=256),
         Tape9mm: TapeConfig(left_pins=219, print_pins=106, right_pins=235),
@@ -75,6 +86,19 @@ class PTP900Series(LabelPrinter):
         Tape18mm: TapeConfig(left_pins=155, print_pins=234, right_pins=171),
         Tape24mm: TapeConfig(left_pins=112, print_pins=320, right_pins=128),
         Tape36mm: TapeConfig(left_pins=45, print_pins=454, right_pins=61),
+        # Heat shrink tubes 2:1 series (HSe)
+        # Corrected configs: shifted +17 pins down based on Brother software analysis
+        HeatShrinkTube5_8mm: TapeConfig(left_pins=261, print_pins=56, right_pins=243),
+        HeatShrinkTube8_8mm: TapeConfig(left_pins=241, print_pins=96, right_pins=223),
+        HeatShrinkTube11_7mm: TapeConfig(left_pins=223, print_pins=132, right_pins=205),
+        HeatShrinkTube17_7mm: TapeConfig(left_pins=183, print_pins=212, right_pins=165),
+        HeatShrinkTube23_6mm: TapeConfig(left_pins=161, print_pins=256, right_pins=143),
+        # Heat shrink tubes 3:1 series (HSe)
+        HeatShrinkTube3_1_5_2mm: TapeConfig(left_pins=269, print_pins=40, right_pins=251),
+        HeatShrinkTube3_1_9_0mm: TapeConfig(left_pins=245, print_pins=88, right_pins=227),
+        HeatShrinkTube3_1_11_2mm: TapeConfig(left_pins=239, print_pins=100, right_pins=221),
+        HeatShrinkTube3_1_21_0mm: TapeConfig(left_pins=169, print_pins=240, right_pins=151),
+        HeatShrinkTube3_1_31_0mm: TapeConfig(left_pins=109, print_pins=360, right_pins=91),
     }
 
 
@@ -97,6 +121,20 @@ class PTP950NW(PTP900Series):
 
 
 class PTP910BT(PTP900Series):
-    """Brother PT-P910BT label printer (with Bluetooth)."""
+    """Brother PT-P910BT label printer (with Bluetooth).
+
+    Note: PT-P910BT does NOT support heat shrink tubes (HSe series).
+    """
 
     USB_PRODUCT_ID = 0x20C7
+
+    # PT-P910BT only supports laminated tapes, not heat shrink tubes
+    PIN_CONFIGS = {
+        Tape3_5mm: TapeConfig(left_pins=248, print_pins=48, right_pins=264),
+        Tape6mm: TapeConfig(left_pins=240, print_pins=64, right_pins=256),
+        Tape9mm: TapeConfig(left_pins=219, print_pins=106, right_pins=235),
+        Tape12mm: TapeConfig(left_pins=197, print_pins=150, right_pins=213),
+        Tape18mm: TapeConfig(left_pins=155, print_pins=234, right_pins=171),
+        Tape24mm: TapeConfig(left_pins=112, print_pins=320, right_pins=128),
+        Tape36mm: TapeConfig(left_pins=45, print_pins=454, right_pins=61),
+    }

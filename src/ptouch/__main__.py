@@ -14,6 +14,16 @@ from . import (
     Align,
     ConnectionNetwork,
     ConnectionUSB,
+    HeatShrinkTube3_1_5_2mm,
+    HeatShrinkTube3_1_9_0mm,
+    HeatShrinkTube3_1_11_2mm,
+    HeatShrinkTube3_1_21_0mm,
+    HeatShrinkTube3_1_31_0mm,
+    HeatShrinkTube5_8mm,
+    HeatShrinkTube8_8mm,
+    HeatShrinkTube11_7mm,
+    HeatShrinkTube17_7mm,
+    HeatShrinkTube23_6mm,
     Label,
     PTE550W,
     PTP750W,
@@ -42,6 +52,23 @@ TAPE_WIDTHS = {
     18: Tape18mm,
     24: Tape24mm,
     36: Tape36mm,
+}
+
+# Mapping of heat shrink tube diameter (mm) to tube classes
+# Tube diameters are unique across both 2:1 and 3:1 series
+TUBE_WIDTHS = {
+    # 2:1 series (HSe)
+    5.8: HeatShrinkTube5_8mm,
+    8.8: HeatShrinkTube8_8mm,
+    11.7: HeatShrinkTube11_7mm,
+    17.7: HeatShrinkTube17_7mm,
+    23.6: HeatShrinkTube23_6mm,
+    # 3:1 series (HSe)
+    5.2: HeatShrinkTube3_1_5_2mm,
+    9.0: HeatShrinkTube3_1_9_0mm,
+    11.2: HeatShrinkTube3_1_11_2mm,
+    21.0: HeatShrinkTube3_1_21_0mm,
+    31.0: HeatShrinkTube3_1_31_0mm,
 }
 
 # Mapping of printer names to printer classes
@@ -104,6 +131,12 @@ Examples:
   # Print label with fixed width (50mm)
   ptouch "Short" --width 50 --host 192.168.1.100 \\
       --printer P900 --tape-width 12
+
+  # Print on heat shrink tube (2:1 series, 5.8mm)
+  ptouch "Cable 1" --host 192.168.1.100 --printer P900 --tube-width 5.8
+
+  # Print on heat shrink tube (3:1 series, 31mm)
+  ptouch "Power" --host 192.168.1.100 --printer P950NW --tube-width 31
 """,
     )
 
@@ -138,7 +171,7 @@ Examples:
         "(e.g., usb://:0x2086/A1B2C3D4E5)",
     )
 
-    # Printer and tape
+    # Printer and tape/tube
     parser.add_argument(
         "--printer",
         "-p",
@@ -146,13 +179,23 @@ Examples:
         choices=list(set(PRINTER_TYPES.keys())),
         help="Printer model",
     )
-    parser.add_argument(
+
+    # Tape or tube (mutually exclusive)
+    media_group = parser.add_mutually_exclusive_group(required=True)
+    media_group.add_argument(
         "--tape-width",
         "-t",
         type=float,
-        required=True,
         choices=list(TAPE_WIDTHS.keys()),
-        help="Tape width in mm",
+        help="Laminated tape width in mm",
+    )
+    media_group.add_argument(
+        "--tube-width",
+        "-T",
+        type=float,
+        choices=list(TUBE_WIDTHS.keys()),
+        help="Heat shrink tube diameter in mm (2:1: 5.8/8.8/11.7/17.7/23.6, "
+        "3:1: 5.2/9.0/11.2/21.0/31.0)",
     )
 
     # Font options
@@ -285,9 +328,26 @@ def main() -> int:
         print("Error: --copies must be at least 1", file=sys.stderr)
         return 1
 
-    # Get printer and tape classes
+    # Get printer and media classes
     printer_class = PRINTER_TYPES[args.printer]
-    tape_class = TAPE_WIDTHS[args.tape_width]
+
+    # Determine media class (tape or tube)
+    if args.tape_width is not None:
+        media_class = TAPE_WIDTHS[args.tape_width]
+        media_width = args.tape_width
+        media_type = "tape"
+    else:
+        media_class = TUBE_WIDTHS[args.tube_width]
+        media_width = args.tube_width
+        media_type = "tube"
+
+        # Warn if using heat shrink with P910BT (not supported)
+        if args.printer == "P910BT":
+            print(
+                "Error: PT-P910BT does not support heat shrink tubes",
+                file=sys.stderr,
+            )
+            return 1
 
     # Create connection
     if args.host:
@@ -319,7 +379,7 @@ def main() -> int:
     # Create label(s)
     if args.image:
         image = Image.open(args.image)
-        labels = [Label(image, tape_class)]
+        labels = [Label(image, media_class)]
     else:
         # Parse alignment
         h_align = ALIGN_HORIZONTAL.get(args.align[0].lower())
@@ -380,7 +440,7 @@ def main() -> int:
 
         labels = create_text_labels(
             args.text,
-            tape_class,
+            media_class,
             font=font,
             align=align,
             font_size=args.font_size,
@@ -397,8 +457,9 @@ def main() -> int:
     use_half_cut = not args.full_cut
     conn_type = "network" if args.host else "USB"
     print(f"Printing {num_labels} label(s) to {printer_class.__name__} via {conn_type}...")
+    media_label = "Tube" if media_type == "tube" else "Tape"
     print(
-        f"Tape: {args.tape_width}mm, High-res: {args.high_resolution}, "
+        f"{media_label}: {media_width}mm, High-res: {args.high_resolution}, "
         f"Compression: {use_compression}"
     )
     if num_labels > 1:
