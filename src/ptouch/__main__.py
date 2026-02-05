@@ -29,6 +29,7 @@ from . import (
     Tape24mm,
     Tape36mm,
     TextLabel,
+    parse_usb_uri,
 )
 from .printer import LabelPrinter
 
@@ -89,6 +90,9 @@ Examples:
   # Print image label via USB
   ptouch --image logo.png --usb --printer E550W --tape-width 12
 
+  # Print via USB with specific device (vendor:product/serial)
+  ptouch "Test" --usb usb://:0x2086/A1B2C3D4E5 --printer P950NW --tape-width 12
+
   # Print with fixed font size (disables auto-sizing)
   ptouch "Test" --host 192.168.1.100 --printer P900 \\
       --tape-width 24 --font-size 48 --high-resolution
@@ -126,8 +130,12 @@ Examples:
     )
     conn_group.add_argument(
         "--usb",
-        action="store_true",
-        help="Use USB connection",
+        nargs="?",
+        const=True,
+        default=None,
+        metavar="URI",
+        help="Use USB connection. Optional URI: usb://[vendor:]product[/serial] "
+        "(e.g., usb://:0x2086/A1B2C3D4E5)",
     )
 
     # Printer and tape
@@ -284,8 +292,21 @@ def main() -> int:
     # Create connection
     if args.host:
         connection = ConnectionNetwork(args.host)
-    else:
+    elif args.usb is True:
+        # --usb without URI
         connection = ConnectionUSB()
+    else:
+        # --usb with URI
+        try:
+            vendor_id, product_id, serial = parse_usb_uri(args.usb)
+            connection = ConnectionUSB(
+                vendor_id=vendor_id,
+                product_id=product_id,
+                serial=serial,
+            )
+        except ValueError as e:
+            print(f"Error: {e}", file=sys.stderr)
+            return 1
 
     # Create printer
     use_compression = not args.no_compression

@@ -18,6 +18,7 @@ from ptouch.connection import (
     PrinterPermissionError,
     PrinterTimeoutError,
     PrinterWriteError,
+    parse_usb_uri,
 )
 
 
@@ -346,3 +347,202 @@ class TestConnectionNetworkRead:
             conn.read()
 
         assert "Not connected" in str(exc_info.value)
+
+
+class TestParseUsbUri:
+    """Test parse_usb_uri function."""
+
+    def test_parse_vendor_product(self) -> None:
+        """Test parsing URI with vendor and product."""
+        vendor, product, serial = parse_usb_uri("usb://0x04f9:0x2086")
+        assert vendor == 0x04F9
+        assert product == 0x2086
+        assert serial is None
+
+    def test_parse_vendor_product_serial(self) -> None:
+        """Test parsing URI with vendor, product and serial."""
+        vendor, product, serial = parse_usb_uri("usb://0x04f9:0x2086/A1B2C3D4E5")
+        assert vendor == 0x04F9
+        assert product == 0x2086
+        assert serial == "A1B2C3D4E5"
+
+    def test_parse_product_only(self) -> None:
+        """Test parsing URI with product only (no vendor)."""
+        vendor, product, serial = parse_usb_uri("usb://:0x2086")
+        assert vendor is None
+        assert product == 0x2086
+        assert serial is None
+
+    def test_parse_product_serial_no_vendor(self) -> None:
+        """Test parsing URI with product and serial but no vendor."""
+        vendor, product, serial = parse_usb_uri("usb://:0x2086/ABC123")
+        assert vendor is None
+        assert product == 0x2086
+        assert serial == "ABC123"
+
+    def test_parse_uppercase_hex(self) -> None:
+        """Test parsing URI with uppercase hex values."""
+        vendor, product, serial = parse_usb_uri("usb://0x04F9:0x2086")
+        assert vendor == 0x04F9
+        assert product == 0x2086
+
+    def test_parse_serial_hex(self) -> None:
+        """Test parsing URI with hex serial number."""
+        vendor, product, serial = parse_usb_uri("usb://:0x2086/00FF1A2B3C")
+        assert serial == "00FF1A2B3C"
+
+    def test_invalid_uri_no_scheme(self) -> None:
+        """Test that URI without usb:// raises ValueError."""
+        with pytest.raises(ValueError) as exc_info:
+            parse_usb_uri("0x04f9:0x2086")
+        assert "Invalid USB URI format" in str(exc_info.value)
+
+    def test_invalid_uri_wrong_scheme(self) -> None:
+        """Test that URI with wrong scheme raises ValueError."""
+        with pytest.raises(ValueError) as exc_info:
+            parse_usb_uri("http://0x04f9:0x2086")
+        assert "Invalid USB URI format" in str(exc_info.value)
+
+    def test_invalid_uri_no_product(self) -> None:
+        """Test that URI without product raises ValueError."""
+        with pytest.raises(ValueError) as exc_info:
+            parse_usb_uri("usb://0x04f9:")
+        assert "Invalid USB URI format" in str(exc_info.value)
+
+    def test_invalid_uri_empty(self) -> None:
+        """Test that empty URI raises ValueError."""
+        with pytest.raises(ValueError) as exc_info:
+            parse_usb_uri("")
+        assert "Invalid USB URI format" in str(exc_info.value)
+
+    def test_invalid_uri_non_hex_serial(self) -> None:
+        """Test that URI with non-hex serial raises ValueError."""
+        with pytest.raises(ValueError) as exc_info:
+            parse_usb_uri("usb://:0x2086/SN-123")
+        assert "Invalid USB URI format" in str(exc_info.value)
+
+    def test_parse_usb_uri_importable_from_package(self) -> None:
+        """Test that parse_usb_uri can be imported from ptouch."""
+        from ptouch import parse_usb_uri as imported_func
+
+        assert imported_func is parse_usb_uri
+
+
+class TestConnectionUSBParams:
+    """Test ConnectionUSB with explicit vendor/product/serial parameters."""
+
+    def test_init_with_no_params(self) -> None:
+        """Test default initialization stores None values."""
+        conn = ConnectionUSB()
+        assert conn._vendor_id is None
+        assert conn._product_id is None
+        assert conn._serial is None
+
+    def test_init_with_product_id(self) -> None:
+        """Test initialization with product_id only."""
+        conn = ConnectionUSB(product_id=0x2086)
+        assert conn._vendor_id is None
+        assert conn._product_id == 0x2086
+        assert conn._serial is None
+
+    def test_init_with_all_params(self) -> None:
+        """Test initialization with all parameters."""
+        conn = ConnectionUSB(vendor_id=0x04F9, product_id=0x2086, serial="ABC123")
+        assert conn._vendor_id == 0x04F9
+        assert conn._product_id == 0x2086
+        assert conn._serial == "ABC123"
+
+    def test_connect_uses_explicit_product_id(self) -> None:
+        """Test that connect() uses explicit product_id over printer's USB_PRODUCT_ID."""
+        with patch("usb.core.find") as mock_find:
+            mock_device = MagicMock()
+            mock_find.return_value = mock_device
+            mock_device.is_kernel_driver_active.return_value = False
+
+            mock_cfg = MagicMock()
+            mock_device.get_active_configuration.return_value = mock_cfg
+
+            with patch("usb.util.find_descriptor") as mock_find_desc:
+                mock_ep = MagicMock()
+                mock_find_desc.return_value = mock_ep
+
+                conn = ConnectionUSB(product_id=0x9999)
+                conn.connect(MockPrinter())  # type: ignore[arg-type]
+
+                call_kwargs = mock_find.call_args[1]
+                # Should use explicit product_id, not MockPrinter's 0x1234
+                assert call_kwargs["idProduct"] == 0x9999
+
+    def test_connect_uses_explicit_vendor_id(self) -> None:
+        """Test that connect() uses explicit vendor_id."""
+        with patch("usb.core.find") as mock_find:
+            mock_device = MagicMock()
+            mock_find.return_value = mock_device
+            mock_device.is_kernel_driver_active.return_value = False
+
+            mock_cfg = MagicMock()
+            mock_device.get_active_configuration.return_value = mock_cfg
+
+            with patch("usb.util.find_descriptor") as mock_find_desc:
+                mock_ep = MagicMock()
+                mock_find_desc.return_value = mock_ep
+
+                conn = ConnectionUSB(vendor_id=0x1234, product_id=0x5678)
+                conn.connect(MockPrinter())  # type: ignore[arg-type]
+
+                call_kwargs = mock_find.call_args[1]
+                assert call_kwargs["idVendor"] == 0x1234
+                assert call_kwargs["idProduct"] == 0x5678
+
+    def test_connect_uses_serial_number(self) -> None:
+        """Test that connect() passes serial_number to usb.core.find."""
+        with patch("usb.core.find") as mock_find:
+            mock_device = MagicMock()
+            mock_find.return_value = mock_device
+            mock_device.is_kernel_driver_active.return_value = False
+
+            mock_cfg = MagicMock()
+            mock_device.get_active_configuration.return_value = mock_cfg
+
+            with patch("usb.util.find_descriptor") as mock_find_desc:
+                mock_ep = MagicMock()
+                mock_find_desc.return_value = mock_ep
+
+                conn = ConnectionUSB(product_id=0x2086, serial="ABC123")
+                conn.connect(MockPrinter())  # type: ignore[arg-type]
+
+                call_kwargs = mock_find.call_args[1]
+                assert call_kwargs["serial_number"] == "ABC123"
+
+    def test_not_found_error_includes_serial(self) -> None:
+        """Test that PrinterNotFoundError includes serial when device not found."""
+        with patch("usb.core.find") as mock_find:
+            mock_find.return_value = None
+
+            conn = ConnectionUSB(product_id=0x2086, serial="ABC123")
+            with pytest.raises(PrinterNotFoundError) as exc_info:
+                conn.connect(MockPrinter())  # type: ignore[arg-type]
+
+            assert "ABC123" in str(exc_info.value)
+            assert "0x2086" in str(exc_info.value).lower()
+
+    def test_connect_without_product_id_uses_printer_class(self) -> None:
+        """Test that connect() falls back to printer's USB_PRODUCT_ID."""
+        with patch("usb.core.find") as mock_find:
+            mock_device = MagicMock()
+            mock_find.return_value = mock_device
+            mock_device.is_kernel_driver_active.return_value = False
+
+            mock_cfg = MagicMock()
+            mock_device.get_active_configuration.return_value = mock_cfg
+
+            with patch("usb.util.find_descriptor") as mock_find_desc:
+                mock_ep = MagicMock()
+                mock_find_desc.return_value = mock_ep
+
+                conn = ConnectionUSB()  # No explicit product_id
+                conn.connect(MockPrinter())  # type: ignore[arg-type]
+
+                call_kwargs = mock_find.call_args[1]
+                # Should use MockPrinter's USB_PRODUCT_ID
+                assert call_kwargs["idProduct"] == 0x1234

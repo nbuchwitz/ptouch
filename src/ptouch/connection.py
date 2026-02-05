@@ -21,6 +21,62 @@ if TYPE_CHECKING:
 USB_VENDOR_ID = 0x04F9
 
 
+def parse_usb_uri(uri: str) -> tuple[int | None, int | None, str | None]:
+    """Parse a USB device URI into vendor_id, product_id, and serial.
+
+    Supported formats:
+    - ``usb://0x04f9:0x2086`` - vendor:product
+    - ``usb://0x04f9:0x2086/serial`` - vendor:product/serial
+    - ``usb://:0x2086`` - product only (uses default vendor)
+    - ``usb://:0x2086/serial`` - product/serial (uses default vendor)
+
+    Parameters
+    ----------
+    uri : str
+        USB URI string to parse.
+
+    Returns
+    -------
+    tuple[int | None, int | None, str | None]
+        Tuple of (vendor_id, product_id, serial). Values may be None if not specified.
+
+    Raises
+    ------
+    ValueError
+        If the URI format is invalid.
+
+    Examples
+    --------
+    >>> parse_usb_uri("usb://0x04f9:0x2086")
+    (0x04f9, 0x2086, None)
+
+    >>> parse_usb_uri("usb://:0x2086/A1B2C3D4E5")
+    (None, 0x2086, 'A1B2C3D4E5')
+    """
+    import re
+
+    # Pattern: usb://[vendor]:[product][/serial]
+    # Serial must be hex characters only
+    pattern = r"^usb://(?:(?P<vendor>0x[0-9a-fA-F]+)?:)?(?P<product>0x[0-9a-fA-F]+)(?:/(?P<serial>[0-9a-fA-F]+))?$"
+    match = re.match(pattern, uri)
+
+    if not match:
+        raise ValueError(
+            f"Invalid USB URI format: '{uri}'. "
+            "Expected format: usb://[vendor:]product[/serial] "
+            "(e.g., usb://0x04f9:0x2086/A1B2C3D4E5 or usb://:0x2086)"
+        )
+
+    vendor_str = match.group("vendor")
+    product_str = match.group("product")
+    serial = match.group("serial")
+
+    vendor_id = int(vendor_str, 16) if vendor_str else None
+    product_id = int(product_str, 16) if product_str else None
+
+    return vendor_id, product_id, serial
+
+
 class PrinterConnectionError(Exception):
     """Base exception for all printer connection errors.
 
@@ -142,15 +198,47 @@ class ConnectionUSB(Connection):
     """USB connection for Brother label printers.
 
     The actual USB connection is established when connect() is called by the printer.
-    The printer class must define a USB_PRODUCT_ID class attribute.
+    The printer class must define a USB_PRODUCT_ID class attribute unless vendor_id
+    and product_id are provided explicitly.
+
+    Parameters
+    ----------
+    vendor_id : int, optional
+        USB vendor ID. Defaults to Brother (0x04F9) if not specified.
+    product_id : int, optional
+        USB product ID. If not specified, uses the printer's USB_PRODUCT_ID.
+    serial : str, optional
+        USB serial number to match a specific device when multiple are connected.
 
     Raises
     ------
     PrinterConnectionError
         If the printer device is not found, endpoints are missing, or USB access fails.
+
+    Examples
+    --------
+    Basic connection (uses printer's USB_PRODUCT_ID):
+
+    >>> connection = ConnectionUSB()
+
+    Specific device by product ID:
+
+    >>> connection = ConnectionUSB(product_id=0x2086)
+
+    Specific device by serial number:
+
+    >>> connection = ConnectionUSB(product_id=0x2086, serial="A1B2C3D4E5")
     """
 
-    def __init__(self) -> None:
+    def __init__(
+        self,
+        vendor_id: int | None = None,
+        product_id: int | None = None,
+        serial: str | None = None,
+    ) -> None:
+        self._vendor_id = vendor_id
+        self._product_id = product_id
+        self._serial = serial
         self._device: Any = None
         self._ep_in: Any = None
         self._ep_out: Any = None
@@ -162,7 +250,8 @@ class ConnectionUSB(Connection):
         Parameters
         ----------
         printer : LabelPrinter
-            The printer instance. Must have USB_PRODUCT_ID class attribute.
+            The printer instance. Must have USB_PRODUCT_ID class attribute
+            unless product_id was provided to the constructor.
 
         Raises
         ------
@@ -173,15 +262,34 @@ class ConnectionUSB(Connection):
         PrinterPermissionError
             If access is denied (requires sudo or udev rules).
         """
-        product_id = getattr(printer, "USB_PRODUCT_ID", None)
+        # Use explicit product_id if provided, otherwise get from printer class
+        product_id = self._product_id
         if product_id is None:
-            raise PrinterConnectionError(
-                f"{printer.__class__.__name__} does not define USB_PRODUCT_ID. "
-                "USB connection requires a printer class with USB_PRODUCT_ID attribute."
-            )
+            product_id = getattr(printer, "USB_PRODUCT_ID", None)
+            if product_id is None:
+                raise PrinterConnectionError(
+                    f"{printer.__class__.__name__} does not define USB_PRODUCT_ID. "
+                    "USB connection requires a printer class with USB_PRODUCT_ID attribute."
+                )
 
-        self._device = usb.core.find(idVendor=USB_VENDOR_ID, idProduct=product_id)
+        vendor_id = self._vendor_id if self._vendor_id is not None else USB_VENDOR_ID
+
+        # Build find kwargs
+        find_kwargs: dict[str, Any] = {
+            "idVendor": vendor_id,
+            "idProduct": product_id,
+        }
+        if self._serial is not None:
+            find_kwargs["serial_number"] = self._serial
+
+        self._device = usb.core.find(**find_kwargs)
         if self._device is None:
+            if self._serial:
+                raise PrinterNotFoundError(
+                    f"USB printer with product ID 0x{product_id:04X} and "
+                    f"serial '{self._serial}' not found. "
+                    "Check if the printer is connected and powered on."
+                )
             raise PrinterNotFoundError(
                 f"USB printer with product ID 0x{product_id:04X} not found. "
                 "Check if the printer is connected and powered on."

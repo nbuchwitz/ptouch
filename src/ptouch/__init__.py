@@ -34,6 +34,7 @@ from .connection import (
     PrinterPermissionError,
     PrinterTimeoutError,
     PrinterWriteError,
+    parse_usb_uri,
 )
 from .label import Align, Label, TextLabel
 from .printer import LabelPrinter, MediaType, TapeConfig
@@ -79,6 +80,7 @@ __all__ = [
     "PrinterPermissionError",
     "PrinterTimeoutError",
     "PrinterWriteError",
+    "parse_usb_uri",
     # Printers
     "LabelPrinter",
     "PTE550W",
