@@ -457,3 +457,267 @@ class TestLabelPrinterPrintMulti:
         ]
         printer.print_multi(labels, high_resolution=True)
         assert len(mock_connection.data) > 0
+
+
+def _find_advanced_mode_byte(data: bytes) -> int:
+    """Return the mode byte from the ESC i K command in a print payload.
+
+    The ESC i K command is ``1B 69 4B <mode>``. Locates the last
+    occurrence (per-page sequences may contain more than one) and
+    returns the byte that follows.
+    """
+    marker = b"\x1b\x69\x4b"
+    idx = data.rfind(marker)
+    assert idx != -1, "ESC i K not found in payload"
+    return data[idx + 3]
+
+
+def _find_mode_settings_byte(data: bytes) -> int:
+    """Return the mode byte from the ESC i M command in a print payload."""
+    marker = b"\x1b\x69\x4d"
+    idx = data.rfind(marker)
+    assert idx != -1, "ESC i M not found in payload"
+    return data[idx + 3]
+
+
+class TestLabelPrinterCapabilityFlags:
+    """Test the SUPPORTS_*/DEFAULT_* class attributes for mirror/chain/special-tape."""
+
+    def test_default_capability_flags_on_base_class(self) -> None:
+        """LabelPrinter base class declares the new features as supported."""
+        from ptouch.printer import LabelPrinter
+
+        assert LabelPrinter.SUPPORTS_MIRROR_PRINT is True
+        assert LabelPrinter.SUPPORTS_CHAIN_PRINTING is True
+        assert LabelPrinter.SUPPORTS_SPECIAL_TAPE is True
+
+    def test_default_values_on_base_class(self) -> None:
+        """LabelPrinter base class defaults the new features to off."""
+        from ptouch.printer import LabelPrinter
+
+        assert LabelPrinter.DEFAULT_MIRROR_PRINT is False
+        assert LabelPrinter.DEFAULT_CHAIN_PRINTING is False
+        assert LabelPrinter.DEFAULT_SPECIAL_TAPE is False
+
+    def test_pte550w_inherits_capability_flags(self) -> None:
+        """PTE550W inherits the new capability flags from the base."""
+        assert PTE550W.SUPPORTS_MIRROR_PRINT is True
+        assert PTE550W.SUPPORTS_CHAIN_PRINTING is True
+        assert PTE550W.SUPPORTS_SPECIAL_TAPE is True
+
+    def test_ptp750w_inherits_capability_flags(self) -> None:
+        """PTP750W inherits the new capability flags from the base."""
+        assert PTP750W.SUPPORTS_MIRROR_PRINT is True
+        assert PTP750W.SUPPORTS_CHAIN_PRINTING is True
+        assert PTP750W.SUPPORTS_SPECIAL_TAPE is True
+
+
+class TestCmdAdvancedModeSpecialTape:
+    """Test ESC i K bit 4 (special-tape no-cut) handling."""
+
+    @pytest.fixture
+    def printer(self, mock_connection: MockConnection) -> PTE550W:
+        """Provide a PTE550W instance."""
+        return PTE550W(mock_connection)
+
+    def test_special_tape_off_by_default(self, printer: PTE550W) -> None:
+        """Bit 4 is clear when special_tape is not passed."""
+        cmd = printer._cmd_advanced_mode_settings()
+        assert cmd[3] & (1 << 4) == 0
+
+    def test_special_tape_on_sets_bit_4(self, printer: PTE550W) -> None:
+        """Bit 4 is set when special_tape=True."""
+        cmd = printer._cmd_advanced_mode_settings(special_tape=True)
+        assert cmd[:3] == b"\x1b\x69\x4b"
+        assert cmd[3] & (1 << 4) != 0
+
+    def test_special_tape_with_half_cut_and_chain(self, printer: PTE550W) -> None:
+        """Bits combine without interfering with each other."""
+        cmd = printer._cmd_advanced_mode_settings(
+            half_cut=True,
+            chain_printing=True,
+            high_resolution=True,
+            special_tape=True,
+        )
+        # bit 2 = half cut
+        assert cmd[3] & (1 << 2) != 0
+        # bit 3 = NO chain printing; chain_printing=True clears it
+        assert cmd[3] & (1 << 3) == 0
+        # bit 4 = special tape
+        assert cmd[3] & (1 << 4) != 0
+        # bit 6 = high resolution
+        assert cmd[3] & (1 << 6) != 0
+
+
+class TestCmdModeSettingsMirror:
+    """Test ESC i M bit 7 (mirror printing) handling."""
+
+    @pytest.fixture
+    def printer(self, mock_connection: MockConnection) -> PTE550W:
+        """Provide a PTE550W instance."""
+        return PTE550W(mock_connection)
+
+    def test_mirror_off_by_default(self, printer: PTE550W) -> None:
+        """Bit 7 is clear when mirror_print is not passed."""
+        cmd = printer._cmd_mode_settings(auto_cut=True)
+        assert cmd[3] & (1 << 7) == 0
+
+    def test_mirror_on_sets_bit_7(self, printer: PTE550W) -> None:
+        """Bit 7 is set when mirror_print=True."""
+        cmd = printer._cmd_mode_settings(auto_cut=True, mirror_print=True)
+        assert cmd[:3] == b"\x1b\x69\x4d"
+        assert cmd[3] & (1 << 7) != 0
+
+
+class TestPrintNewKwargs:
+    """Test that print() honors mirror/chain/special_tape kwargs end-to-end."""
+
+    def test_print_with_mirror_sets_bit_7_in_mode(
+        self, mock_connection: MockConnection, sample_image: Image.Image
+    ) -> None:
+        """print(mirror=True) results in ESC i M bit 7 set in the sent data."""
+        printer = PTE550W(mock_connection)
+        printer.print(Label(sample_image, Tape12mm), mirror=True)
+        mode_byte = _find_mode_settings_byte(mock_connection.data)
+        assert mode_byte & (1 << 7) != 0
+
+    def test_print_without_mirror_clears_bit_7(
+        self, mock_connection: MockConnection, sample_image: Image.Image
+    ) -> None:
+        """print() with no mirror kwarg leaves ESC i M bit 7 clear."""
+        printer = PTE550W(mock_connection)
+        printer.print(Label(sample_image, Tape12mm))
+        mode_byte = _find_mode_settings_byte(mock_connection.data)
+        assert mode_byte & (1 << 7) == 0
+
+    def test_print_with_chain_clears_no_chain_bit(
+        self, mock_connection: MockConnection, sample_image: Image.Image
+    ) -> None:
+        """print(chain=True) clears ESC i K bit 3 (the no-chain bit is INVERTED)."""
+        printer = PTE550W(mock_connection)
+        printer.print(Label(sample_image, Tape12mm), chain=True)
+        mode_byte = _find_advanced_mode_byte(mock_connection.data)
+        # bit 3 is "NO chain printing"; chain=True means it should be 0
+        assert mode_byte & (1 << 3) == 0
+
+    def test_print_without_chain_sets_no_chain_bit(
+        self, mock_connection: MockConnection, sample_image: Image.Image
+    ) -> None:
+        """print() with no chain kwarg sets ESC i K bit 3 (feed+cut after page)."""
+        printer = PTE550W(mock_connection)
+        printer.print(Label(sample_image, Tape12mm))
+        mode_byte = _find_advanced_mode_byte(mock_connection.data)
+        assert mode_byte & (1 << 3) != 0
+
+    def test_print_with_special_tape_sets_bit_4(
+        self, mock_connection: MockConnection, sample_image: Image.Image
+    ) -> None:
+        """print(special_tape=True) sets ESC i K bit 4."""
+        printer = PTE550W(mock_connection)
+        printer.print(Label(sample_image, Tape12mm), special_tape=True)
+        mode_byte = _find_advanced_mode_byte(mock_connection.data)
+        assert mode_byte & (1 << 4) != 0
+
+    def test_print_without_special_tape_clears_bit_4(
+        self, mock_connection: MockConnection, sample_image: Image.Image
+    ) -> None:
+        """print() with no special_tape kwarg leaves ESC i K bit 4 clear."""
+        printer = PTE550W(mock_connection)
+        printer.print(Label(sample_image, Tape12mm))
+        mode_byte = _find_advanced_mode_byte(mock_connection.data)
+        assert mode_byte & (1 << 4) == 0
+
+
+class TestPrintDefaultsHonoredFromClass:
+    """Test that DEFAULT_* class attrs flow through when kwargs are omitted."""
+
+    def test_subclass_default_mirror_print_true(
+        self, mock_connection: MockConnection, sample_image: Image.Image
+    ) -> None:
+        """A subclass with DEFAULT_MIRROR_PRINT=True mirrors by default."""
+
+        class MirroredP750W(PTP750W):
+            DEFAULT_MIRROR_PRINT: bool = True
+
+        printer = MirroredP750W(mock_connection)
+        printer.print(Label(sample_image, Tape12mm))
+        mode_byte = _find_mode_settings_byte(mock_connection.data)
+        assert mode_byte & (1 << 7) != 0
+
+    def test_runtime_kwarg_overrides_subclass_default(
+        self, mock_connection: MockConnection, sample_image: Image.Image
+    ) -> None:
+        """Explicit mirror=False overrides a subclass DEFAULT_MIRROR_PRINT=True."""
+
+        class MirroredP750W(PTP750W):
+            DEFAULT_MIRROR_PRINT: bool = True
+
+        printer = MirroredP750W(mock_connection)
+        printer.print(Label(sample_image, Tape12mm), mirror=False)
+        mode_byte = _find_mode_settings_byte(mock_connection.data)
+        assert mode_byte & (1 << 7) == 0
+
+
+class TestPrintMultiForwardsNewKwargs:
+    """Test that print_multi() forwards mirror/chain/special_tape to print()."""
+
+    def test_print_multi_with_mirror(
+        self, mock_connection: MockConnection, sample_image: Image.Image
+    ) -> None:
+        """print_multi(mirror=True) sets ESC i M bit 7 on every page."""
+        printer = PTE550W(mock_connection)
+        labels = [Label(sample_image, Tape12mm), Label(sample_image, Tape12mm)]
+        printer.print_multi(labels, mirror=True)
+        # Every ESC i M occurrence should have bit 7 set
+        data = mock_connection.data
+        idx = 0
+        marker = b"\x1b\x69\x4d"
+        found = 0
+        while True:
+            idx = data.find(marker, idx)
+            if idx == -1:
+                break
+            assert data[idx + 3] & (1 << 7) != 0
+            found += 1
+            idx += len(marker)
+        assert found >= 2  # one per page
+
+    def test_print_multi_with_chain(
+        self, mock_connection: MockConnection, sample_image: Image.Image
+    ) -> None:
+        """print_multi(chain=True) clears ESC i K bit 3 on every page."""
+        printer = PTE550W(mock_connection)
+        labels = [Label(sample_image, Tape12mm), Label(sample_image, Tape12mm)]
+        printer.print_multi(labels, chain=True)
+        data = mock_connection.data
+        idx = 0
+        marker = b"\x1b\x69\x4b"
+        found = 0
+        while True:
+            idx = data.find(marker, idx)
+            if idx == -1:
+                break
+            assert data[idx + 3] & (1 << 3) == 0
+            found += 1
+            idx += len(marker)
+        assert found >= 2
+
+    def test_print_multi_with_special_tape(
+        self, mock_connection: MockConnection, sample_image: Image.Image
+    ) -> None:
+        """print_multi(special_tape=True) sets ESC i K bit 4 on every page."""
+        printer = PTE550W(mock_connection)
+        labels = [Label(sample_image, Tape12mm), Label(sample_image, Tape12mm)]
+        printer.print_multi(labels, special_tape=True)
+        data = mock_connection.data
+        idx = 0
+        marker = b"\x1b\x69\x4b"
+        found = 0
+        while True:
+            idx = data.find(marker, idx)
+            if idx == -1:
+                break
+            assert data[idx + 3] & (1 << 4) != 0
+            found += 1
+            idx += len(marker)
+        assert found >= 2

@@ -93,12 +93,18 @@ class LabelPrinter(ABC):
     SUPPORTS_AUTO_CUT: bool = True
     SUPPORTS_HALF_CUT: bool = True
     SUPPORTS_PAGE_NUMBER_CUTS: bool = True
+    SUPPORTS_MIRROR_PRINT: bool = True
+    SUPPORTS_CHAIN_PRINTING: bool = True
+    SUPPORTS_SPECIAL_TAPE: bool = True
 
     # Default values for each feature (used when not specified)
     DEFAULT_AUTO_CUT: bool = True
     DEFAULT_HALF_CUT: bool = True
     DEFAULT_HIGH_RESOLUTION: bool = False
     DEFAULT_PAGE_NUMBER_CUTS: bool = False
+    DEFAULT_MIRROR_PRINT: bool = False
+    DEFAULT_CHAIN_PRINTING: bool = False
+    DEFAULT_SPECIAL_TAPE: bool = False
 
     @property
     def supports_high_resolution(self) -> bool:
@@ -298,6 +304,7 @@ class LabelPrinter(ABC):
         half_cut: bool = False,
         chain_printing: bool = False,
         high_resolution: bool = False,
+        special_tape: bool = False,
     ) -> bytes:
         """Advanced mode settings (ESC i K).
 
@@ -309,6 +316,13 @@ class LabelPrinter(ABC):
             Enable chain printing (no cut between labels).
         high_resolution : bool, default False
             Enable high resolution mode.
+        special_tape : bool, default False
+            Enable special-tape no-cut mode. When the loaded cassette is
+            special (non-laminated decorative) tape, the printer skips
+            all cuts so the cutter blade does not damage the tape. The
+            printer is expected to ignore this bit when laminated tape
+            is loaded; behavior is therefore conditional on the cassette
+            type.
 
         Returns
         -------
@@ -320,6 +334,7 @@ class LabelPrinter(ABC):
         Bit 0: Draft printing (1=draft, 0=normal)
         Bit 2: Half cut (1=on, 0=off)
         Bit 3: No chain printing (1=no chain, 0=chain)
+        Bit 4: Special tape no-cut (1=on, 0=off)
         Bit 6: High resolution (1=yes, 0=no)
         """
         mode = 0
@@ -327,6 +342,8 @@ class LabelPrinter(ABC):
             mode |= 1 << 2
         if not chain_printing:
             mode |= 1 << 3
+        if special_tape:
+            mode |= 1 << 4
         if high_resolution:
             mode |= 1 << 6
         return struct.pack("4B", 0x1B, 0x69, 0x4B, mode)
@@ -478,6 +495,8 @@ class LabelPrinter(ABC):
         auto_cut: bool = True,
         half_cut: bool = False,
         chain_printing: bool = False,
+        mirror_print: bool = False,
+        special_tape: bool = False,
     ) -> bytes:
         """Build control sequence for a single page in a multi-page job.
 
@@ -499,6 +518,11 @@ class LabelPrinter(ABC):
             Enable half-cut mode.
         chain_printing : bool, default False
             Enable chain printing (no cut after label).
+        mirror_print : bool, default False
+            Enable mirror printing (for transparent / iron-on tape).
+        special_tape : bool, default False
+            Enable special-tape no-cut mode. Effect is conditional on
+            the printer detecting non-laminated decorative tape.
 
         Returns
         -------
@@ -521,13 +545,14 @@ class LabelPrinter(ABC):
         # Determine media type from tape (important for heat shrink tubes)
         media_type = self._get_media_type(tape)
         control_seq += self._cmd_print_information(num_lines, media_type, tape.width_mm)
-        control_seq += self._cmd_mode_settings(auto_cut=auto_cut)
+        control_seq += self._cmd_mode_settings(auto_cut=auto_cut, mirror_print=mirror_print)
         if auto_cut and self.SUPPORTS_PAGE_NUMBER_CUTS:
             control_seq += self._cmd_page_number_cuts(pages=1)
         control_seq += self._cmd_advanced_mode_settings(
             half_cut=half_cut,
             chain_printing=chain_printing,
             high_resolution=high_resolution,
+            special_tape=special_tape,
         )
         control_seq += self._cmd_margin(margin)
         control_seq += self._cmd_set_compression(tiff_compression=self.use_compression)
@@ -615,6 +640,9 @@ class LabelPrinter(ABC):
         feed: bool = True,
         auto_cut: bool | None = None,
         half_cut: bool | None = None,
+        mirror: bool | None = None,
+        chain: bool | None = None,
+        special_tape: bool | None = None,
     ) -> None:
         """Print a label using column-by-column raster format.
 
@@ -631,11 +659,24 @@ class LabelPrinter(ABC):
             If True, sends 0x1A (print and feed).
             If False, sends 0x0C (print without feed) - used for multi-label printing.
         auto_cut : bool or None, optional
-            Override auto-cut setting. If None, uses printer defaults.
+            Override auto-cut setting. If None, uses DEFAULT_AUTO_CUT.
             Used by print_multi() for half-cut mode.
         half_cut : bool or None, optional
-            Override half-cut setting. If None, uses printer defaults.
+            Override half-cut setting. If None, uses DEFAULT_HALF_CUT.
             Used by print_multi() for half-cut mode.
+        mirror : bool or None, optional
+            Enable mirror printing. If None, uses DEFAULT_MIRROR_PRINT.
+            Useful for transparent / iron-on tape where the image must
+            be reversed.
+        chain : bool or None, optional
+            Enable chain printing. If None, uses DEFAULT_CHAIN_PRINTING.
+            When True, the printer skips the final feed + full-cut after
+            this page so the next print job continues without a leader
+            feed. Each job in the chain must opt in explicitly.
+        special_tape : bool or None, optional
+            Enable special-tape no-cut mode. If None, uses
+            DEFAULT_SPECIAL_TAPE. Effect is conditional on the loaded
+            cassette being non-laminated decorative tape.
 
         Raises
         ------
@@ -683,7 +724,9 @@ class LabelPrinter(ABC):
             is_first_page=False,
             auto_cut=auto_cut if auto_cut is not None else self.DEFAULT_AUTO_CUT,
             half_cut=half_cut if half_cut is not None else self.DEFAULT_HALF_CUT,
-            chain_printing=False,
+            chain_printing=chain if chain is not None else self.DEFAULT_CHAIN_PRINTING,
+            mirror_print=mirror if mirror is not None else self.DEFAULT_MIRROR_PRINT,
+            special_tape=special_tape if special_tape is not None else self.DEFAULT_SPECIAL_TAPE,
         )
 
         raster_data = self._build_raster_data(raster, num_lines, high_res)
@@ -703,6 +746,9 @@ class LabelPrinter(ABC):
         high_resolution: bool | None = None,
         half_cut: bool = True,
         precut: bool = False,
+        mirror: bool | None = None,
+        chain: bool | None = None,
+        special_tape: bool | None = None,
     ) -> None:
         """Print multiple labels with cuts between and after last.
 
@@ -720,7 +766,27 @@ class LabelPrinter(ABC):
             Whether to use high resolution mode. If None, uses printer's setting.
         half_cut : bool, default True
             If True, use half-cuts between labels (saves tape).
-            If False, use full cuts between all labels.
+            If False, request full cuts between all labels.
+
+            Note: on many Brother PT-series printers the full-cutter blade
+            is downstream of the print head, so cuts between pages of a
+            multi-page job (sent with ``feed=False`` / ``0x0C``) cannot
+            physically reach the cutter and degrade to half-cuts at the
+            print-head position. In practice this means ``half_cut=False``
+            and ``half_cut=True`` often produce indistinguishable output
+            (half-cuts between, full-cut at end). To get true separate
+            full-cut labels, issue N independent ``print()`` calls — each
+            pays a leader-feed but yields a fully-cut label.
+        mirror : bool or None, optional
+            Enable mirror printing on every label. Forwarded to ``print()``.
+        chain : bool or None, optional
+            Enable chain printing on every label. Forwarded to ``print()``.
+            When True, the final label of the job will NOT feed/full-cut,
+            leaving the chain open for the next ``print_multi()`` /
+            ``print()`` call.
+        special_tape : bool or None, optional
+            Enable special-tape no-cut mode on every label. Forwarded to
+            ``print()``.
 
         Raises
         ------
@@ -756,6 +822,9 @@ class LabelPrinter(ABC):
                 feed=is_last,
                 auto_cut=not half_cut,
                 half_cut=half_cut,
+                mirror=mirror,
+                chain=chain,
+                special_tape=special_tape,
             )
 
         logger.info(f"Finished printing {len(labels)} labels.")
