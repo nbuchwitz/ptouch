@@ -11,8 +11,19 @@ import socket
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, Any
 
-import usb.core
-import usb.util
+# pyusb is declared as an optional `[usb]` extra in pyproject.toml. Importing
+# it at module load time makes the entire library unusable for network-only
+# callers who don't install the extra. Wrap the imports so module load
+# succeeds without pyusb; `ConnectionUSB.connect()` raises a clear error
+# below if a caller actually tries to use USB without it.
+try:
+    import usb.core
+    import usb.util
+
+    _HAS_PYUSB = True
+except ImportError:  # pragma: no cover — exercised when pyusb is absent
+    usb = None  # type: ignore[assignment]
+    _HAS_PYUSB = False
 
 if TYPE_CHECKING:
     from .printer import LabelPrinter
@@ -236,6 +247,8 @@ class ConnectionUSB(Connection):
         product_id: int | None = None,
         serial: str | None = None,
     ) -> None:
+        # Initialize attributes first so __del__ -> close() can run safely
+        # if the pyusb-absent check raises below.
         self._vendor_id = vendor_id
         self._product_id = product_id
         self._serial = serial
@@ -243,6 +256,11 @@ class ConnectionUSB(Connection):
         self._ep_in: Any = None
         self._ep_out: Any = None
         self._kernel_driver_detached = False
+        if not _HAS_PYUSB:
+            raise PrinterConnectionError(
+                "USB support requires the `pyusb` package. Install it via "
+                "`pip install ptouch[usb]` or `pip install pyusb` directly."
+            )
 
     def connect(self, printer: LabelPrinter) -> None:
         """Establish USB connection to the printer.

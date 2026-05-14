@@ -546,3 +546,36 @@ class TestConnectionUSBParams:
                 call_kwargs = mock_find.call_args[1]
                 # Should use MockPrinter's USB_PRODUCT_ID
                 assert call_kwargs["idProduct"] == 0x1234
+
+
+class TestPyusbLazyImport:
+    """Test that the connection module loads without pyusb installed."""
+
+    def test_connection_usb_raises_clear_error_when_pyusb_absent(self) -> None:
+        """ConnectionUSB() raises PrinterConnectionError if pyusb is missing.
+
+        pyusb is declared as an optional `[usb]` extra. The module must
+        load even when pyusb is absent; users should hit a clear error
+        only when they try to construct a ConnectionUSB.
+        """
+        import ptouch.connection as conn_mod
+        from ptouch.connection import ConnectionUSB, PrinterConnectionError
+
+        original = conn_mod._HAS_PYUSB
+        conn_mod._HAS_PYUSB = False
+        try:
+            with pytest.raises(PrinterConnectionError, match="pyusb"):
+                ConnectionUSB()
+        finally:
+            conn_mod._HAS_PYUSB = original
+
+    def test_has_pyusb_flag_is_true_in_test_env(self) -> None:
+        """The test extras install pyusb, so the flag is True here.
+
+        Sanity check that prevents accidental regression of the import
+        guard (e.g., someone changing `_HAS_PYUSB = False` unconditionally
+        and silently breaking USB).
+        """
+        import ptouch.connection as conn_mod
+
+        assert conn_mod._HAS_PYUSB is True
