@@ -271,6 +271,7 @@ def create_text_labels(
     align: Align,
     font_size: int | None = None,
     min_width_mm: float | None = None,
+    fixed_width_mm: float | None = None,
     auto_size: bool = True,
 ) -> list[TextLabel]:
     """Create TextLabel instances for multiple text strings.
@@ -289,6 +290,8 @@ def create_text_labels(
         Font size in pixels (only used when auto_size=False).
     min_width_mm : float or None
         Minimum label width in millimeters.
+    fixed_width_mm : float or None
+        Fixed label width in millimeters (locks the label to this width).
     auto_size : bool
         If True, auto-size font to 80% of print height.
 
@@ -305,6 +308,7 @@ def create_text_labels(
             font_size=font_size,
             align=align,
             min_width_mm=min_width_mm,
+            fixed_width_mm=fixed_width_mm,
             auto_size=auto_size,
         )
         for text in texts
@@ -425,10 +429,10 @@ def main() -> int:
 
         # Calculate image width: --width is total label length, subtract margins (both sides)
         margin_mm = args.margin if args.margin is not None else LabelPrinter.DEFAULT_MARGIN_MM
-        min_width_mm = None
+        fixed_width_mm = None
         if args.width is not None:
-            min_width_mm = args.width - (2 * margin_mm)
-            if min_width_mm <= 0:
+            fixed_width_mm = args.width - (2 * margin_mm)
+            if fixed_width_mm <= 0:
                 print(
                     f"Error: --width must be greater than 2x margin ({2 * margin_mm}mm)",
                     file=sys.stderr,
@@ -444,7 +448,7 @@ def main() -> int:
             font=font,
             align=align,
             font_size=args.font_size,
-            min_width_mm=min_width_mm,
+            fixed_width_mm=fixed_width_mm,
             auto_size=auto_size,
         )
 
