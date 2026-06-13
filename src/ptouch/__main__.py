@@ -469,7 +469,9 @@ def main() -> int:
 
     # Print
     num_labels = len(labels)
-    use_half_cut = not args.full_cut
+    # Only half-cut on models that support it; printers like the PT-P710BT
+    # ignore the half-cut command, so fall back to full cuts there.
+    use_half_cut = not args.full_cut and printer_class.SUPPORTS_HALF_CUT
     conn_type = "network" if args.host else "USB"
     print(f"Printing {num_labels} label(s) to {printer_class.__name__} via {conn_type}...")
     media_label = "Tube" if media_type == "tube" else "Tape"

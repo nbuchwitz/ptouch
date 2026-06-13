@@ -721,3 +721,74 @@ class TestPrintMultiForwardsNewKwargs:
             found += 1
             idx += len(marker)
         assert found >= 2
+
+
+class TestCapabilityEnforcement:
+    """Test that SUPPORTS_* flags are enforced in print()/print_multi()."""
+
+    def test_explicit_unsupported_feature_raises(
+        self, mock_connection: MockConnection, sample_image: Image.Image
+    ) -> None:
+        """Explicitly requesting a feature the model lacks raises ValueError."""
+
+        class NoMirrorP750W(PTP750W):
+            SUPPORTS_MIRROR_PRINT = False
+
+        printer = NoMirrorP750W(mock_connection)
+        with pytest.raises(ValueError, match="does not support mirror printing"):
+            printer.print(Label(sample_image, Tape12mm), mirror=True)
+        # No print payload (raster transfer / print command) should be emitted.
+        assert b"\x47" not in mock_connection.data  # raster graphics transfer
+        assert b"\x1a" not in mock_connection.data and b"\x0c" not in mock_connection.data
+
+    def test_unsupported_default_is_clamped_not_raised(
+        self, mock_connection: MockConnection, sample_image: Image.Image
+    ) -> None:
+        """A True DEFAULT_* on an unsupported feature is forced off, not raised."""
+
+        class NoMirrorDefaultOnP750W(PTP750W):
+            SUPPORTS_MIRROR_PRINT = False
+            DEFAULT_MIRROR_PRINT = True
+
+        printer = NoMirrorDefaultOnP750W(mock_connection)
+        # No kwarg → default path → must not raise, and bit 7 stays clear.
+        printer.print(Label(sample_image, Tape12mm))
+        mode_byte = _find_mode_settings_byte(mock_connection.data)
+        assert mode_byte & (1 << 7) == 0
+
+    def test_explicit_false_on_unsupported_is_allowed(
+        self, mock_connection: MockConnection, sample_image: Image.Image
+    ) -> None:
+        """Explicitly disabling an unsupported feature is fine (no raise)."""
+
+        class NoMirrorP750W(PTP750W):
+            SUPPORTS_MIRROR_PRINT = False
+
+        printer = NoMirrorP750W(mock_connection)
+        printer.print(Label(sample_image, Tape12mm), mirror=False)  # must not raise
+        mode_byte = _find_mode_settings_byte(mock_connection.data)
+        assert mode_byte & (1 << 7) == 0
+
+    def test_print_multi_half_cut_clamped_for_unsupported(
+        self, mock_connection: MockConnection, sample_image: Image.Image
+    ) -> None:
+        """print_multi() default half_cut clamps to full-cut (no raise) when unsupported."""
+        from ptouch.printers import PTP710BT
+
+        printer = PTP710BT(mock_connection)
+        labels = [Label(sample_image, Tape12mm), Label(sample_image, Tape12mm)]
+        # PTP710BT.SUPPORTS_HALF_CUT is False; the default half_cut=True must
+        # clamp rather than raise, and every page's half-cut bit (2) stays clear.
+        printer.print_multi(labels)
+        data = mock_connection.data
+        marker = b"\x1b\x69\x4b"
+        idx = 0
+        found = 0
+        while True:
+            idx = data.find(marker, idx)
+            if idx == -1:
+                break
+            assert data[idx + 3] & (1 << 2) == 0
+            found += 1
+            idx += len(marker)
+        assert found >= 2

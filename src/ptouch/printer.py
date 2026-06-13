@@ -632,6 +632,46 @@ class LabelPrinter(ABC):
         self.connection.write(b"\x1a")  # print and feed → triggers the cut
         logger.info("Precut: leader ejected.")
 
+    def _resolve_feature(
+        self,
+        name: str,
+        requested: bool | None,
+        *,
+        default: bool,
+        supported: bool,
+    ) -> bool:
+        """Resolve an optional feature flag against its capability and default.
+
+        Parameters
+        ----------
+        name : str
+            Human-readable feature name, used in the error message.
+        requested : bool or None
+            The caller's explicit request. None means "not specified".
+        default : bool
+            The class ``DEFAULT_*`` value, used when ``requested`` is None.
+        supported : bool
+            The class ``SUPPORTS_*`` value for this printer model.
+
+        Returns
+        -------
+        bool
+            The resolved value. Always False when the feature is unsupported.
+
+        Raises
+        ------
+        ValueError
+            If the feature is explicitly requested (``requested=True``) but the
+            printer model does not support it.
+        """
+        if requested is None:
+            # Fall back to the class default, but never enable an unsupported
+            # feature just because the default says so.
+            return default and supported
+        if requested and not supported:
+            raise ValueError(f"{type(self).__name__} does not support {name}")
+        return requested
+
     def print(
         self,
         label: Label,
@@ -681,7 +721,10 @@ class LabelPrinter(ABC):
         Raises
         ------
         ValueError
-            If the label's tape type is not supported by this printer.
+            If the label's tape type is not supported by this printer, or if
+            a feature (``auto_cut``, ``half_cut``, ``mirror``, ``chain``,
+            ``special_tape``) is explicitly requested but the printer model
+            does not support it (see the ``SUPPORTS_*`` class attributes).
         """
         # Resolve high_resolution setting
         high_res = self.high_resolution if high_resolution is None else high_resolution
@@ -716,17 +759,44 @@ class LabelPrinter(ABC):
         else:
             logger.info(f"Resolution: Standard ({self.RESOLUTION_DPI}x{self.RESOLUTION_DPI} dpi)")
 
+        # Resolve each optional feature against its SUPPORTS_*/DEFAULT_* flags.
+        # Explicitly requesting an unsupported feature raises ValueError.
+        auto_cut = self._resolve_feature(
+            "auto-cut", auto_cut, default=self.DEFAULT_AUTO_CUT, supported=self.SUPPORTS_AUTO_CUT
+        )
+        half_cut = self._resolve_feature(
+            "half-cut", half_cut, default=self.DEFAULT_HALF_CUT, supported=self.SUPPORTS_HALF_CUT
+        )
+        chain = self._resolve_feature(
+            "chain printing",
+            chain,
+            default=self.DEFAULT_CHAIN_PRINTING,
+            supported=self.SUPPORTS_CHAIN_PRINTING,
+        )
+        mirror = self._resolve_feature(
+            "mirror printing",
+            mirror,
+            default=self.DEFAULT_MIRROR_PRINT,
+            supported=self.SUPPORTS_MIRROR_PRINT,
+        )
+        special_tape = self._resolve_feature(
+            "special-tape mode",
+            special_tape,
+            default=self.DEFAULT_SPECIAL_TAPE,
+            supported=self.SUPPORTS_SPECIAL_TAPE,
+        )
+
         control_seq = self._build_page_control_sequence(
             num_lines=num_lines,
             margin=margin_dots,
             tape=label.tape,
             high_resolution=high_res,
             is_first_page=False,
-            auto_cut=auto_cut if auto_cut is not None else self.DEFAULT_AUTO_CUT,
-            half_cut=half_cut if half_cut is not None else self.DEFAULT_HALF_CUT,
-            chain_printing=chain if chain is not None else self.DEFAULT_CHAIN_PRINTING,
-            mirror_print=mirror if mirror is not None else self.DEFAULT_MIRROR_PRINT,
-            special_tape=special_tape if special_tape is not None else self.DEFAULT_SPECIAL_TAPE,
+            auto_cut=auto_cut,
+            half_cut=half_cut,
+            chain_printing=chain,
+            mirror_print=mirror,
+            special_tape=special_tape,
         )
 
         raster_data = self._build_raster_data(raster, num_lines, high_res)
@@ -804,6 +874,12 @@ class LabelPrinter(ABC):
                     f"All labels must use the same tape type. "
                     f"Label 1 uses {tape_type.__name__}, label {i} uses {type(label.tape).__name__}"
                 )
+
+        # half_cut here is a plain bool default rather than an explicit
+        # request, so clamp it to the printer's capability: models without
+        # half-cut support (e.g. PT-P710BT) fall back to full cuts instead
+        # of raising on the common default path.
+        half_cut = half_cut and self.SUPPORTS_HALF_CUT
 
         cut_type = "half-cut" if half_cut else "full-cut"
         logger.info(f"Printing {len(labels)} labels with {cut_type} between")
