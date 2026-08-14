@@ -24,6 +24,23 @@ Printer Implementations
 Supported Printers
 ------------------
 
+PT-D600
+~~~~~~~
+
+* **Class**: ``PTD600``
+* **Resolution**: 180x180 DPI
+* **Print head**: 128 pins
+* **Max tape width**: 24mm
+* **Features**: Auto-cut, Half-cut, Mirror print
+* **Protocol note**: Uses the legacy ``ESC i R 01`` raster-start command and
+  a 100-byte initialization sequence.
+* **High-resolution note**: Hardware experiments found evidence of 180x360 DPI
+  half-step feed, but this support intentionally exposes only 180x180 DPI.
+  The generic renderer cannot yet provide additional source detail; renderer
+  work and unsupported-option policy are deferred for separate review.
+* **Tape note**: Laminated TZe tape widths are supported. Heat-shrink
+  geometry remains unverified.
+
 PT-E550W Series
 ~~~~~~~~~~~~~~~
 

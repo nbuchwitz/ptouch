@@ -25,6 +25,7 @@ from . import (
     HeatShrinkTube17_7mm,
     HeatShrinkTube23_6mm,
     Label,
+    PTD600,
     PTE550W,
     PTP710BT,
     PTP750W,
@@ -74,6 +75,7 @@ TUBE_WIDTHS = {
 
 # Mapping of printer names to printer classes
 PRINTER_TYPES = {
+    "D600": PTD600,
     "E550W": PTE550W,
     "P710BT": PTP710BT,
     "P750W": PTP750W,

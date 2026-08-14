@@ -10,7 +10,7 @@ from PIL import Image
 from ptouch.label import Label
 from ptouch.printer import TapeConfig
 from ptouch.printer import MediaType
-from ptouch.printers import PTE550W, PTP750W, PTP900
+from ptouch.printers import PTD600, PTE550W, PTP750W, PTP900
 from ptouch.tape import (
     Tape3_5mm,
     Tape6mm,
@@ -90,6 +90,49 @@ class TestPTE550W:
         tape = Tape36mm()
         with pytest.raises(ValueError, match="not supported"):
             printer.get_tape_config(tape)
+
+
+class TestPTD600:
+    """Test PT-D600 printer class."""
+
+    def test_class_attributes(self) -> None:
+        """Test PT-D600 printer specifications."""
+        assert PTD600.USB_PRODUCT_ID == 0x2074
+        assert PTD600.TOTAL_PINS == 128
+        assert PTD600.BYTES_PER_LINE == 16
+        assert PTD600.RESOLUTION_DPI == 180
+        assert PTD600.RESOLUTION_DPI_HIGH == 0
+        assert PTD600.DEFAULT_USE_COMPRESSION is True
+
+    def test_does_not_advertise_high_resolution(self, mock_connection: MockConnection) -> None:
+        """PT-D600 high-resolution mode is withheld pending renderer work."""
+        printer = PTD600(mock_connection)
+        assert printer.supports_high_resolution is False
+
+    def test_pin_configs(self, mock_connection: MockConnection) -> None:
+        """Test PT-D600 tape geometry."""
+        printer = PTD600(mock_connection)
+
+        assert len(printer.PIN_CONFIGS) == 6
+        for tape_config in printer.PIN_CONFIGS.values():
+            assert tape_config.left_pins + tape_config.print_pins + tape_config.right_pins == 128
+
+        config = printer.get_tape_config(Tape24mm())
+        assert config.left_pins == 0
+        assert config.print_pins == 128
+        assert config.right_pins == 0
+
+    def test_initialization_matches_verified_100_null_sequence(
+        self, mock_connection: MockConnection
+    ) -> None:
+        """Test the PT-D600 initialization sequence used by ptouch-print."""
+        PTD600(mock_connection)
+        assert mock_connection.data == b"\x00" * 100 + b"\x1b\x40"
+
+    def test_cmd_raster_mode(self, mock_connection: MockConnection) -> None:
+        """Test the PT-D600 legacy raster mode command."""
+        printer = PTD600(mock_connection)
+        assert printer._cmd_raster_mode() == b"\x1b\x69\x52\x01"
 
 
 class TestSupportedTapes:

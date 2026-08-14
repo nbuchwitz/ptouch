@@ -67,6 +67,51 @@ class PTE550W(LabelPrinter):
     }
 
 
+class PTD600(LabelPrinter):
+    """Brother PT-D600 label printer (128 pins, 180 DPI).
+
+    The PT-D600 uses the legacy raster-start command ``ESC i R 01`` and a
+    100-byte initialization sequence. It is not protocol-compatible with the
+    P700-family models, which use ``ESC i a 01``.
+
+    Print-area geometry follows the PT-D600 raster profile used by the
+    upstream ``ptouch-print`` implementation. The 3.5mm tape is reported by
+    the printer as 4mm, as represented by :class:`Tape3_5mm`.
+
+    PT-D600 support is intentionally limited to the verified 180x180 DPI
+    standard mode. Hardware experiments found evidence of 180x360 DPI
+    half-step feed, but the current generic high-resolution renderer cannot
+    supply additional source detail. That mode is withheld pending separate
+    renderer work and review.
+
+    Heat-shrink geometry is intentionally left out until it can be verified
+    against a PT-D600 raster reference or hardware output.
+    """
+
+    USB_PRODUCT_ID = 0x2074
+    TOTAL_PINS = 128
+    BYTES_PER_LINE = 16
+    RESOLUTION_DPI = 180
+    RESOLUTION_DPI_HIGH = 0
+    DEFAULT_USE_COMPRESSION = True
+    PIN_CONFIGS = {
+        Tape3_5mm: TapeConfig(left_pins=52, print_pins=24, right_pins=52),
+        Tape6mm: TapeConfig(left_pins=48, print_pins=32, right_pins=48),
+        Tape9mm: TapeConfig(left_pins=38, print_pins=52, right_pins=38),
+        Tape12mm: TapeConfig(left_pins=26, print_pins=76, right_pins=26),
+        Tape18mm: TapeConfig(left_pins=4, print_pins=120, right_pins=4),
+        Tape24mm: TapeConfig(left_pins=0, print_pins=128, right_pins=0),
+    }
+
+    def _cmd_invalidate_and_initialize(self) -> bytes:
+        """Use the 100-null initialization sequence verified on PT-D600."""
+        return self._cmd_invalidate(length=100) + self._cmd_initialize()
+
+    def _cmd_raster_mode(self) -> bytes:
+        """Set PT-D600 raster graphics mode (ESC i R)."""
+        return b"\x1b\x69\x52\x01"
+
+
 class PTP750W(PTE550W):
     """Brother PT-P750W label printer (128 pins, 180 DPI).
 
