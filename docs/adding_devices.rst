@@ -194,7 +194,8 @@ Add to the README.md supported printers table and update docs.
 Example: P900 Series Printers
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The P900 series printers share identical specifications, so they inherit from a common base:
+The P900 series printers share nearly identical specifications, so they inherit from a
+common base and override only what differs:
 
 .. code-block:: python
 
@@ -218,6 +219,7 @@ The P900 series printers share identical specifications, so they inherit from a 
    class PTP910BT(PTP900Series):
        """Brother PT-P910BT (USB + Bluetooth)."""
        USB_PRODUCT_ID = 0x20af  # Same as P900
+       RESOLUTION_DPI_HIGH = 0  # this model has no high-resolution mode
 
    class PTP950NW(PTP900Series):
        """Brother PT-P950NW (USB + WiFi + NFC)."""

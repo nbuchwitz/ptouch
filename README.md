@@ -53,10 +53,12 @@ Comprehensive documentation is available at [ptouch.readthedocs.io](https://ptou
 | PT-P750W | 180 DPI | 360 DPI | 128 | 24mm | `PTP750W` |
 | PT-P900 | 360 DPI | 720 DPI | 560 | 36mm | `PTP900` |
 | PT-P900W | 360 DPI | 720 DPI | 560 | 36mm | `PTP900W` |
-| PT-P910BT | 360 DPI | 720 DPI | 560 | 36mm | `PTP910BT` |
+| PT-P910BT | 360 DPI | None | 560 | 36mm | `PTP910BT` |
 | PT-P950NW | 360 DPI | 720 DPI | 560 | 36mm | `PTP950NW` |
 
 > **Note:** The PT-P710BT is a basic consumer model and does **not** support half-cut or heat shrink tubes. Its firmware ignores the half-cut command, so use `--full-cut` for multi-label jobs to get a cut between labels.
+
+> **Note:** The PT-P910BT is the one model in the P900 series without a high-resolution mode, so `--high-resolution` is rejected for it.
 
 ### Tapes
 

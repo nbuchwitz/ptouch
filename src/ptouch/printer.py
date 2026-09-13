@@ -179,20 +179,34 @@ class LabelPrinter(ABC):
             Whether to use TIFF compression. Defaults to class setting.
         high_resolution : bool or None, optional
             Whether to use high resolution mode. Defaults to class setting.
+
+        Raises
+        ------
+        ValueError
+            If ``high_resolution`` is explicitly requested but the printer
+            model has no high-resolution mode (``RESOLUTION_DPI_HIGH = 0``).
         """
+        # Resolve the instance settings before touching the connection, so an
+        # unsupported request fails without leaving a half-open printer. An
+        # explicit high_resolution=True on a model that lacks the mode raises
+        # here rather than at print time; a class DEFAULT_HIGH_RESOLUTION of
+        # True is clamped, matching the other capability-gated features.
+        self.use_compression = (
+            self.DEFAULT_USE_COMPRESSION if use_compression is None else use_compression
+        )
+        self.high_resolution = self._resolve_feature(
+            "high-resolution printing",
+            high_resolution,
+            default=self.DEFAULT_HIGH_RESOLUTION,
+            supported=self.supports_high_resolution,
+        )
+
         self.connection = connection
         connection.connect(self)
 
         # Send initialization commands after connection is established
         init_data = self._cmd_invalidate_and_initialize()
         self.connection.write(init_data)
-
-        self.use_compression = (
-            self.DEFAULT_USE_COMPRESSION if use_compression is None else use_compression
-        )
-        self.high_resolution = (
-            self.DEFAULT_HIGH_RESOLUTION if high_resolution is None else high_resolution
-        )
 
     def get_tape_config(self, tape: Tape) -> TapeConfig:
         """Get the tape configuration for a given tape.
@@ -722,12 +736,20 @@ class LabelPrinter(ABC):
         ------
         ValueError
             If the label's tape type is not supported by this printer, or if
-            a feature (``auto_cut``, ``half_cut``, ``mirror``, ``chain``,
-            ``special_tape``) is explicitly requested but the printer model
-            does not support it (see the ``SUPPORTS_*`` class attributes).
+            a feature (``high_resolution``, ``auto_cut``, ``half_cut``,
+            ``mirror``, ``chain``, ``special_tape``) is explicitly requested
+            but the printer model does not support it (see the ``SUPPORTS_*``
+            class attributes and ``RESOLUTION_DPI_HIGH``).
         """
-        # Resolve high_resolution setting
-        high_res = self.high_resolution if high_resolution is None else high_resolution
+        # Resolve high-resolution against the model's capability. The default
+        # comes from the instance rather than a class DEFAULT_* attribute, and
+        # __init__ has already validated and clamped it.
+        high_res = self._resolve_feature(
+            "high-resolution printing",
+            high_resolution,
+            default=self.high_resolution,
+            supported=self.supports_high_resolution,
+        )
 
         tape_config = self.get_tape_config(label.tape)
         label.prepare(tape_config.print_pins, self.RESOLUTION_DPI)

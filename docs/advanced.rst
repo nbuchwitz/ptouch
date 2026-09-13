@@ -9,10 +9,14 @@ High Resolution Mode
 Understanding Resolution
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Each printer supports two resolution modes:
+Most printers support two resolution modes:
 
 * **Standard resolution**: 180 DPI (E550W, P750W) or 360 DPI (P900 series)
 * **High resolution**: 360 DPI (E550W, P750W) or 720 DPI (P900 series)
+
+The PT-P910BT is the exception: it has no high-resolution mode, and requesting
+one raises ``ValueError``. Check ``printer.supports_high_resolution`` if you
+need to branch on this.
 
 High resolution mode doubles the vertical resolution, resulting in:
 

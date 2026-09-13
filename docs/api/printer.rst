@@ -45,13 +45,23 @@ PT-P750W Series
 PT-P900 Series
 ~~~~~~~~~~~~~~
 
-All P900 series printers share the same specifications:
-
-* **Classes**: ``PTP900``, ``PTP900W``, ``PTP910BT``, ``PTP950NW``
+* **Classes**: ``PTP900``, ``PTP900W``, ``PTP950NW``
 * **Resolution**: 360 DPI (standard), 720 DPI (high)
 * **Print head**: 560 pins
 * **Max tape width**: 36mm
 * **Features**: Auto-cut, Half-cut, Page number cuts
+
+PT-P910BT
+~~~~~~~~~
+
+Shares the P900 series raster protocol, but has no high-resolution mode.
+
+* **Class**: ``PTP910BT``
+* **Resolution**: 360 DPI (standard); high resolution not supported
+* **Print head**: 560 pins
+* **Max tape width**: 36mm
+* **Features**: Auto-cut, Half-cut, Page number cuts
+* **Tapes**: laminated TZe only (no heat shrink tubes)
 
 See Also
 --------

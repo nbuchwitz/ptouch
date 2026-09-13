@@ -10,7 +10,7 @@ from PIL import Image
 from ptouch.label import Label
 from ptouch.printer import TapeConfig
 from ptouch.printer import MediaType
-from ptouch.printers import PTE550W, PTP750W, PTP900
+from ptouch.printers import PTE550W, PTP750W, PTP900, PTP910BT
 from ptouch.tape import (
     Tape3_5mm,
     Tape6mm,
@@ -792,3 +792,76 @@ class TestCapabilityEnforcement:
             found += 1
             idx += len(marker)
         assert found >= 2
+
+
+class TestHighResolutionCapability:
+    """Test that the high-resolution capability is enforced like the SUPPORTS_* flags."""
+
+    def test_p910bt_has_no_high_resolution_mode(self) -> None:
+        """PT-P910BT declares no high-resolution mode, unlike the rest of the series."""
+        assert PTP910BT.RESOLUTION_DPI_HIGH == 0
+        assert PTP900.RESOLUTION_DPI_HIGH == 720
+
+    def test_supports_high_resolution_reflects_the_model(
+        self, mock_connection: MockConnection
+    ) -> None:
+        """supports_high_resolution follows RESOLUTION_DPI_HIGH per model."""
+        assert PTP900(mock_connection).supports_high_resolution is True
+        assert PTP910BT(mock_connection).supports_high_resolution is False
+
+    def test_explicit_request_on_unsupported_model_raises(
+        self, mock_connection: MockConnection, sample_image: Image.Image
+    ) -> None:
+        """Asking for high resolution on a model without it raises before any output."""
+        printer = PTP910BT(mock_connection)
+        with pytest.raises(ValueError, match="does not support high-resolution printing"):
+            printer.print(Label(sample_image, Tape12mm), high_resolution=True)
+        # No print payload may be emitted: doubling the raster lines without a
+        # matching feed resolution would print the label at twice the length.
+        # (The invalidate/initialize sequence is already sent by __init__.)
+        assert b"\x47" not in mock_connection.data  # raster graphics transfer
+        assert b"\x1a" not in mock_connection.data and b"\x0c" not in mock_connection.data
+
+    def test_constructor_request_on_unsupported_model_raises(
+        self, mock_connection: MockConnection
+    ) -> None:
+        """An explicit constructor request raises too, not just the print() kwarg."""
+        with pytest.raises(ValueError, match="does not support high-resolution printing"):
+            PTP910BT(mock_connection, high_resolution=True)
+        # The failure happens before the connection is opened, so nothing is sent.
+        assert mock_connection.data == b""
+
+    def test_unsupported_class_default_is_clamped(
+        self, mock_connection: MockConnection, sample_image: Image.Image
+    ) -> None:
+        """A True DEFAULT_HIGH_RESOLUTION on an unsupported model is forced off."""
+
+        class HighResDefaultOnP910BT(PTP910BT):
+            DEFAULT_HIGH_RESOLUTION = True
+
+        printer = HighResDefaultOnP910BT(mock_connection)
+        assert printer.high_resolution is False  # resolved once, honestly
+        printer.print(Label(sample_image, Tape12mm))
+        assert _find_advanced_mode_byte(mock_connection.data) & (1 << 6) == 0
+
+    def test_supported_model_keeps_constructor_request(
+        self, mock_connection: MockConnection
+    ) -> None:
+        """A constructor request on a model that supports it is preserved."""
+        assert PTP900(mock_connection, high_resolution=True).high_resolution is True
+
+    def test_explicit_false_on_unsupported_model_is_allowed(
+        self, mock_connection: MockConnection, sample_image: Image.Image
+    ) -> None:
+        """Explicitly disabling high resolution on a model without it is fine."""
+        printer = PTP910BT(mock_connection)
+        printer.print(Label(sample_image, Tape12mm), high_resolution=False)
+        assert _find_advanced_mode_byte(mock_connection.data) & (1 << 6) == 0
+
+    def test_supported_model_still_sets_the_bit(
+        self, mock_connection: MockConnection, sample_image: Image.Image
+    ) -> None:
+        """A model that does support high resolution still emits ESC i K bit 6."""
+        printer = PTP900(mock_connection)
+        printer.print(Label(sample_image, Tape12mm), high_resolution=True)
+        assert _find_advanced_mode_byte(mock_connection.data) & (1 << 6) != 0

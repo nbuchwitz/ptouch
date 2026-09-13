@@ -166,10 +166,18 @@ class PTP950NW(PTP900Series):
 class PTP910BT(PTP900Series):
     """Brother PT-P910BT label printer (with Bluetooth).
 
-    Note: PT-P910BT does NOT support heat shrink tubes (HSe series).
+    Note: PT-P910BT does NOT support heat shrink tubes (HSe series), and
+    unlike the rest of the P900 series it has no high-resolution mode.
     """
 
     USB_PRODUCT_ID = 0x20C7
+
+    # Unlike the PT-P900/P900W/P950NW, the PT-P910BT has no high-resolution
+    # mode. Section 2.3.1 "Resolution" lists only "360 dpi high, 360 dpi wide"
+    # for this model, and the ESC i K bit 6 description reads: "For PT-P910BT,
+    # please set this value as 0 (High-resolution printing is not supported)."
+    # Source: cv_ptp900_eng_raster_102.pdf, pages 12 and 36.
+    RESOLUTION_DPI_HIGH = 0
 
     # PT-P910BT only supports laminated tapes, not heat shrink tubes
     PIN_CONFIGS = {
