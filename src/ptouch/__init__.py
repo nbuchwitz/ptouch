@@ -9,6 +9,7 @@ supporting both USB and network connections. It handles raster image generation,
 compression, and printer-specific command sequences.
 
 Supported printers:
+    - PT-D600 (128 pins, 180 DPI)
     - PT-E550W (128 pins, 180 DPI)
     - PT-P750W (128 pins, 180 DPI)
     - PT-P710BT (128 pins, 180 DPI)
@@ -39,7 +40,7 @@ from .connection import (
 )
 from .label import Align, Label, TextLabel
 from .printer import LabelPrinter, MediaType, TapeConfig
-from .printers import PTE550W, PTP710BT, PTP750W, PTP900, PTP900W, PTP910BT, PTP950NW
+from .printers import PTD600, PTE550W, PTP710BT, PTP750W, PTP900, PTP900W, PTP910BT, PTP950NW
 from .tape import (
     # Heat shrink tubes (HSe series)
     HeatShrinkTube,
@@ -95,6 +96,7 @@ __all__ = [
     "parse_usb_uri",
     # Printers
     "LabelPrinter",
+    "PTD600",
     "PTE550W",
     "PTP710BT",
     "PTP750W",

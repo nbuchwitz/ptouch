@@ -24,6 +24,19 @@ Printer Implementations
 Supported Printers
 ------------------
 
+PT-D600
+~~~~~~~
+
+Desktop QWERTY label maker with a USB PC-print mode. Shares the PT-E550W /
+PT-P710BT raster protocol.
+
+* **Class**: ``PTD600``
+* **Resolution**: 180 DPI (standard), 360 DPI (high)
+* **Print head**: 128 pins
+* **Max tape width**: 24mm
+* **Features**: Auto-cut (full cut only -- the D600 has no half-cutter)
+* **Tapes**: laminated and non-laminated TZe; no heat shrink tubes
+
 PT-E550W Series
 ~~~~~~~~~~~~~~~
 

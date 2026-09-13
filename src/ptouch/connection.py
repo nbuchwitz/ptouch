@@ -370,12 +370,18 @@ class ConnectionUSB(Connection):
         # is slow to drain. Loop over the remaining bytes instead of bailing
         # on the first short write.
         last_error = None
+        # The printer applies USB back-pressure while it prints: a bulk write
+        # blocks for roughly the print duration, and a long label can take tens
+        # of seconds. A short fixed timeout truncates long jobs mid-stream (and
+        # the retry below then re-sends the whole payload, duplicating the
+        # label). Scale the timeout with payload size, with a generous floor.
+        timeout_ms = max(60000, len(payload) // 4)
         for attempt in range(retries):
             try:
                 remaining = memoryview(payload)
                 total = len(payload)
                 while remaining:
-                    written = self._ep_out.write(bytes(remaining), timeout=5000)
+                    written = self._ep_out.write(bytes(remaining), timeout=timeout_ms)
                     if written <= 0:
                         raise PrinterWriteError(
                             f"USB write stalled: {total - len(remaining)}/{total} bytes "

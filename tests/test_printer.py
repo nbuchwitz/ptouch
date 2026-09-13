@@ -10,7 +10,7 @@ from PIL import Image
 from ptouch.label import Label
 from ptouch.printer import TapeConfig
 from ptouch.printer import MediaType
-from ptouch.printers import PTE550W, PTP750W, PTP900
+from ptouch.printers import PTD600, PTE550W, PTP710BT, PTP750W, PTP900
 from ptouch.tape import (
     Tape3_5mm,
     Tape6mm,
@@ -135,6 +135,36 @@ class TestPTP750W:
         """Test that P750W has same attributes as E550W."""
         assert PTP750W.TOTAL_PINS == PTE550W.TOTAL_PINS
         assert PTP750W.PIN_CONFIGS == PTE550W.PIN_CONFIGS
+
+
+class TestPTD600:
+    """Test PTD600 printer class."""
+
+    def test_usb_product_id(self) -> None:
+        """Test PT-D600 USB product ID."""
+        assert PTD600.USB_PRODUCT_ID == 0x2074
+
+    def test_inherits_from_p710bt(self) -> None:
+        """Test that D600 inherits the P710BT (128px/180dpi, laminated) profile."""
+        assert issubclass(PTD600, PTP710BT)
+
+    def test_shares_p710bt_specifications(self) -> None:
+        """Test that D600 shares the P710BT head, tapes and full-cut-only profile."""
+        assert PTD600.TOTAL_PINS == 128
+        assert PTD600.RESOLUTION_DPI == 180
+        assert PTD600.PIN_CONFIGS == PTP710BT.PIN_CONFIGS
+        assert PTD600.SUPPORTS_HALF_CUT is False
+        # D600 spec: 180 dpi / 180x360 high-res (inherited from the family).
+        assert PTD600.RESOLUTION_DPI_HIGH == 360
+
+    def test_print_sends_data(
+        self, mock_connection: MockConnection, sample_image: Image.Image
+    ) -> None:
+        """Test that print sends data to the connection on the D600."""
+        printer = PTD600(mock_connection)
+        label = Label(sample_image, Tape12mm)
+        printer.print(label)
+        assert len(mock_connection.data) > 0
 
 
 class TestPTP900:

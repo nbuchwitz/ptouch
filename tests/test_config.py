@@ -6,7 +6,16 @@
 
 from ptouch.connection import USB_VENDOR_ID
 from ptouch.printer import TapeConfig
-from ptouch.printers import PTE550W, PTP710BT, PTP750W, PTP900, PTP900W, PTP910BT, PTP950NW
+from ptouch.printers import (
+    PTD600,
+    PTE550W,
+    PTP710BT,
+    PTP750W,
+    PTP900,
+    PTP900W,
+    PTP910BT,
+    PTP950NW,
+)
 
 
 class TestTapeConfig:
@@ -56,6 +65,10 @@ class TestUSBConstants:
         """Test Brother USB vendor ID."""
         # Brother Industries vendor ID
         assert USB_VENDOR_ID == 0x04F9
+
+    def test_usb_product_id_d600(self) -> None:
+        """Test PT-D600 product ID."""
+        assert PTD600.USB_PRODUCT_ID == 0x2074
 
     def test_usb_product_id_e550w(self) -> None:
         """Test PT-E550W product ID."""

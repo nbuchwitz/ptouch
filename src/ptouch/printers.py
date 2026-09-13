@@ -105,6 +105,30 @@ class PTP710BT(PTE550W):
     }
 
 
+class PTD600(PTP710BT):
+    """Brother PT-D600 label printer (128 pins, 180 DPI, USB).
+
+    Desktop QWERTY label maker with a USB PC-print mode. It speaks the same
+    128-pin / 180 dpi raster protocol as the PT-E550W / PT-P710BT family
+    (ESC i z print-information command + PackBits), so it inherits that path.
+
+    Fixes the long-standing quirks seen with the C ``ptouch-print`` tool
+    (premature tape cut, ~73 mm max length): those stem from never sending the
+    print-information command, so the firmware never learns the job length and
+    stops/cuts at an internal default. The base class always sends ESC i z with
+    the real raster count, so the D600 prints full-length and cuts correctly.
+
+    Verified on real hardware (12 mm TZe): standard 180 dpi and high-resolution
+    (180x360) text and image printing, full cut. TZe tapes (3.5-24 mm,
+    laminated and non-laminated); no heat-shrink (HSe) tubes. Per the Brother
+    spec the D600 has an auto full-cutter only (no half-cut), so
+    SUPPORTS_HALF_CUT stays False (inherited from PTP710BT). Device max label
+    length is 300 mm.
+    """
+
+    USB_PRODUCT_ID = 0x2074
+
+
 class PTP900Series(LabelPrinter):
     """Base class for Brother PT-P900 series printers (560 pins, 360 DPI).
 

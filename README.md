@@ -8,7 +8,7 @@ A Python library for Brother P-touch label printers.
 
 ## Features
 
-- Support for Brother P-touch label printers (PT-E550W, PT-P710BT, PT-P750W, PT-P900, PT-P900W, PT-P910BT, PT-P950NW)
+- Support for Brother P-touch label printers (PT-D600, PT-E550W, PT-P710BT, PT-P750W, PT-P900, PT-P900W, PT-P910BT, PT-P950NW)
 - Network (TCP/IP) and USB connections
 - Text labels with customizable fonts and alignment
 - Image label printing
@@ -48,6 +48,7 @@ Comprehensive documentation is available at [ptouch.readthedocs.io](https://ptou
 
 | Printer | Resolution | High-Res | Pins | Max Tape Width | Class |
 |---------|------------|----------|------|----------------|-------|
+| PT-D600 | 180 DPI | 360 DPI | 128 | 24mm | `PTD600` |
 | PT-E550W | 180 DPI | 360 DPI | 128 | 24mm | `PTE550W` |
 | PT-P710BT | 180 DPI | 360 DPI | 128 | 24mm | `PTP710BT` |
 | PT-P750W | 180 DPI | 360 DPI | 128 | 24mm | `PTP750W` |
@@ -57,6 +58,8 @@ Comprehensive documentation is available at [ptouch.readthedocs.io](https://ptou
 | PT-P950NW | 360 DPI | 720 DPI | 560 | 36mm | `PTP950NW` |
 
 > **Note:** The PT-P710BT is a basic consumer model and does **not** support half-cut or heat shrink tubes. Its firmware ignores the half-cut command, so use `--full-cut` for multi-label jobs to get a cut between labels.
+
+> **Note:** The PT-D600 is a desktop keyboard label maker with a USB PC-print mode, using the same 128-pin / 180 dpi (180x360 high-res) raster protocol as the PT-E550W / PT-P710BT family; standard and high-resolution text and image printing are verified on hardware. TZe tapes only (laminated and non-laminated, 3.5-24mm; no heat-shrink tubes); device max label length 300mm. Per Brother's spec the cutter is auto full-cut only (no half-cut), so use `--full-cut`.
 
 ### Tapes
 
@@ -276,7 +279,7 @@ Note: `Align` is also available as a backwards-compatible alias at package level
 
 ```
 usage: ptouch [-h] [--image FILE] (--host IP | --usb)
-              --printer {E550W,P710BT,P750W,P900,P900W,P910BT,P950NW}
+              --printer {D600,E550W,P710BT,P750W,P900,P900W,P910BT,P950NW}
               --tape-width {3.5,6,9,12,18,24,36} [--font PATH] [--font-size PX]
               [--align H V] [--high-resolution] [--margin MM] [--no-compression]
               [--full-cut] [--precut] [--copies N] [--width MM] [text ...]
